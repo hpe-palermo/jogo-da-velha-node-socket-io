@@ -8,12 +8,17 @@
 </head>
 
 <body>
+    <label for="nomeSala">Nome da Sala: </label>
+    <input type="text" name="nomeSala" id="nomeSala" value="<%= locals.salaGame.nome %>">
+    <br>
     <label for="jogador1">Jogador 1: </label>
     <input type="text" name="jogador1" id="jogador1" value="<%= locals.salaGame.jogador1 %>">
     <label for="jogador2">Jogador 2: </label>
     <input type="text" name="jogador2" id="jogador2" value="<%= locals.salaGame.jogador2 %>">
+    <label for="jogador1">Número de Jogadores: </label>
     <input type="text" name="numJogadores" id="numJogadores" value="<%= locals.salaGame.numJogadores %>">
-    <input type="text" name="idSala" id="idSala" value="<%= locals.salaGame.idSala %>">
+    <label for="jogador1">ID da Sala: </label>
+    <input type="text" name="idSala" id="idSala" value="<%= locals.salaGame.id %>">
 
     <div> meu id: <span></span></div>
 
@@ -30,27 +35,46 @@
         }
         getNameCookie();
 
+        socket.emit('getMyIdSocket', nomeJogador);
+        socket.on('getMyId', (idSocket) => {
+            document.querySelector('span').innerText = idSocket;
+            novaSala.idJ1 = idSocket;
+            alert(idSocket);
+        });
+
         let numJogadores = document.getElementById('numJogadores').value;
         let idSala = document.getElementById('idSala').value;
+        let nomeSala = document.getElementById('nomeSala').value;
 
-        if (numJogadores == 2) {
-            alert('2 Jogadores')
-            socket.emit('preeencher-2-player', idSala, nomeJogador);
+        let novaSala = {
+            id: idSala,
+            criador: document.getElementById('jogador1').value,
+            nome: nomeSala,
+            adversario: document.getElementById('numJogadores').value,
+            numJogadores: document.getElementById('numJogadores').value,
+            jogador1: document.getElementById('jogador1').value,
+            jogador2: '',
+            idJ1: '',
+            idJ2: ''
         }
 
-        socket.on('preeencher-2-player', (nomeJogador) => {
+        alert(numJogadores);
+        if (numJogadores == 2) {
+            alert('2 Jogadores')
+            socket.emit('preencher-2-player-aqui', novaSala, nomeJogador);
+        }
+
+        socket.on('nome-2-player-recebido', (nomeJogador) => {
+            document.getElementById('jogador2').value = nomeJogador;
+            document.getElementById('numJogadores').value = 2;
+
+            socket.emit('avisar-2-player', novaSala);
+        });
+
+        socket.on('preencher-seu-2-player', (nomeJogador) => {
             document.getElementById('jogador2').value = nomeJogador;
             document.getElementById('numJogadores').value = 2;
         });
-
-
-        // window.onload = () => {
-        //     socket.emit('getMyIdSocket', nomeJogador);
-        // };
-        // socket.on('getMyId', (idSocket) => {
-        //     document.querySelector('span').innerText = idSocket;
-        //     alert(idSocket);
-        // });
 
     </script>
 </body>
