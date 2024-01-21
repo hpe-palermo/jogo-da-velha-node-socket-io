@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Partida</title>
+</head>
+
+<body>
+    <label for="jogador1">Jogador 1: </label>
+    <input type="text" name="jogador1" id="jogador1" value="<%= locals.salaGame.jogador1 %>">
+    <label for="jogador2">Jogador 2: </label>
+    <input type="text" name="jogador2" id="jogador2" value="<%= locals.salaGame.jogador2 %>">
+    <input type="text" name="numJogadores" id="numJogadores" value="<%= locals.salaGame.numJogadores %>">
+    <input type="text" name="idSala" id="idSala" value="<%= locals.salaGame.idSala %>">
+
+    <div> meu id: <span></span></div>
+
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script>
+        const socket = io();
+        let nomeJogador;
+
+        function getNameCookie() {
+            let cookie = document.cookie;
+            let indIgual = cookie.indexOf('=');
+            nomeJogador = cookie.substring(indIgual + 1, cookie.length);
+        }
+        getNameCookie();
+
+        let numJogadores = document.getElementById('numJogadores').value;
+        let idSala = document.getElementById('idSala').value;
+
+        if (numJogadores == 2) {
+            alert('2 Jogadores')
+            socket.emit('preeencher-2-player', idSala, nomeJogador);
+        }
+
+        socket.on('preeencher-2-player', (nomeJogador) => {
+            document.getElementById('jogador2').value = nomeJogador;
+            document.getElementById('numJogadores').value = 2;
+        });
+
+
+        // window.onload = () => {
+        //     socket.emit('getMyIdSocket', nomeJogador);
+        // };
+        // socket.on('getMyId', (idSocket) => {
+        //     document.querySelector('span').innerText = idSocket;
+        //     alert(idSocket);
+        // });
+
+    </script>
+</body>
+
+</html>
