@@ -9,9 +9,9 @@ const io = new Server(server);
 
 let salasDoJogo = [];
 let idSequence = 0;
-let namespaceSala;
 let nome_socket = {};
 let url_idRoom = {};
+let salaGlobal = {};
 
 let links_funcoes = {
     '/': (req, res) => {
@@ -24,6 +24,7 @@ let links_funcoes = {
 
 app.set('view engine', 'ejs');
 app.set('views', join(__dirname, 'views'));
+app.use(express.static(join(__dirname, 'public')));
 
 function gerarLinksAplicacao() {
     for (let link in links_funcoes) {
@@ -62,19 +63,23 @@ function criarNovaSala(link) {
             salaGame.jogador1 = salaGame.criador;
             salaGame.numJogadores++;
             let dados = {
-                salaGame: salaGame
+                salaGame: salaGlobal
             };
             console.log("numJogadores: " + salaGame.numJogadores)
 
             if (salaGame.numJogadores == 1) {
+                salaGlobal.jogador1 = salaGame.criador;
                 console.log('Criador entrou!!!');
+                res.render('partida', dados);
             } else if (salaGame.numJogadores == 2) {
+                // salaGame.jogador2 = nomeJogador
                 console.log('Adversario entrou!!!');
+                res.render('partida', dados);
             } else {
                 console.log('A sala já está cheia!!!');
             }
 
-            res.render('partida', dados);
+            // res.render('partida', dados);
         } else {
             // Se a sala não foi encontrada, você pode lidar com isso de acordo com sua lógica
             res.status(404).send('Sala não encontrada');
@@ -110,10 +115,11 @@ io.on('connection', (socket) => {
         sala.link = `/salas/${sala.id}-${sala.nome}-${sala.criador}`;
         sala.idJ1 = nome_socket[sala.criador];
 
+        salaGlobal = sala;
         criarNovaSala(sala.link);
         salasDoJogo.push(sala);
         console.log(salasDoJogo);
-        
+
         io.emit('listar-salas', salasDoJogo);
         idSequence++;
 
@@ -127,8 +133,6 @@ io.on('connection', (socket) => {
         console.log(salasDoJogo);
         console.log('-----------------------------------');
 
-        // nova namespace de sala
-        // namespaceSala = io.of(sala.link);
         socket.emit('entrar-na-partida', sala.link);
     });
 
@@ -146,16 +150,32 @@ io.on('connection', (socket) => {
     });
 
     // pagina partida.ejs =======================================
-    socket.on('preeencher-2-player', (idSala, nomeJogador) => {
-        let salaGame;
-        salasDoJogo.forEach((sala) => {
-            if (sala.id == idSala) {
-                salaGame = sala;
-            }
-        })
-        salaGame.jogador2 = nomeJogador;
-        socket.emit('preeencher-2-player', salaGame.jogador2);
+    socket.on('preencher-2-player-aqui', (salaGame, nome) => {
+        salaGlobal.jogador2 = nome;
+        socket.emit('nome-2-player-recebido', nome);
     });
+
+    socket.on('avisar-2-player', (salaGame) => {
+        let senderID = nome_socket[salaGlobal.jogador1];
+        let receivedID = nome_socket[salaGlobal.jogador2];
+
+        console.log('De ' + senderID + ' para ' + receivedID);
+
+        console.log("------------ SALA GLOBAL ------------");
+        console.log(salaGlobal);
+        console.log(salaGlobal.jogador2);
+
+        socket.to(receivedID).emit('preencher-seu-2-player', salaGlobal.jogador2);
+        socket.to(senderID).emit('preencher-seu-2-player', salaGlobal.jogador2);
+    });
+
+    socket.on('iniciar-jogo-players', (jogador2) => {
+        let idSocketJ2 = nome_socket[jogador2];
+        console.log('Inicie seu jogo '+jogador2);
+        socket.to(idSocketJ2).emit('iniciar-jogo-players', '');
+        socket.to(socket.id).emit('iniciar-jogo-players', '');
+    });
+
 
 });
 
