@@ -45,6 +45,7 @@
         const socket = io();
         let nomeJogadorNestaSala;
         let nomeJogadorConvidado;
+        let jogadorSimbolo = {};
 
         function getNameCookie() {
             let cookie = document.cookie;
@@ -92,8 +93,29 @@
             document.querySelector('#jogador2').value = novaSala.jogador2;
             document.querySelector('#jogador2').value = novaSala.jogador2;
             document.querySelector('#numJogadores').value = 2;
+            socket.emit('decide-quem-comeca', novaSala);
             iniciarJogo();
         });
+
+        socket.on('quem-comeca-eh', (vez) => {
+            vezDoJogador = vez;
+
+            // decide quem eh quem
+            if (Math.floor(Math.random() * 2)) {
+                jogadorSimbolo[novaSala.jogador1] = 'X';
+                jogadorSimbolo[novaSala.jogador2] = 'O';
+            } else {
+                jogadorSimbolo[novaSala.jogador1] = 'O';
+                jogadorSimbolo[novaSala.jogador2] = 'X';
+            }
+
+            alert(`Eu, ${nomeJogadorNestaSala}, sou o ${jogadorSimbolo[nomeJogadorNestaSala]}`);
+
+            document.querySelector('#vezDoJogador').innerText = vezDoJogador;
+        });
+
+
+
 
         // ============================== configuraces da partida ==============================
 
