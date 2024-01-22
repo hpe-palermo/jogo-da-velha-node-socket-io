@@ -187,12 +187,21 @@ io.on('connection', (socket) => {
     socket.on('decide-quem-comeca', (novaSala) => {
         let senderID = nome_socket[novaSala.jogador1];
         let receivedID = nome_socket[novaSala.jogador2];
+        let jogadorSimbolo = {};
 
         let vez = decideQuemComeca();
+        // decide quem eh quem
+        if (Math.floor(Math.random() * 2)) {
+            jogadorSimbolo[novaSala.jogador1] = 'X';
+            jogadorSimbolo[novaSala.jogador2] = 'O';
+        } else {
+            jogadorSimbolo[novaSala.jogador1] = 'O';
+            jogadorSimbolo[novaSala.jogador2] = 'X';
+        }
 
         if (senderID !== receivedID) {
-            socket.to(receivedID).emit('quem-comeca-eh', vez);
-            socket.emit('quem-comeca-eh', vez);
+            socket.to(receivedID).emit('quem-comeca-eh', vez, jogadorSimbolo);
+            socket.emit('quem-comeca-eh', vez, jogadorSimbolo);
         }
     });
 
