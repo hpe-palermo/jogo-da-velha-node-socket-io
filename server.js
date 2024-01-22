@@ -200,6 +200,10 @@ io.on('connection', (socket) => {
         socket.to(nome_socket[j2]).emit('preencher-quem-eh-quem', ply_simbolo, j1, j2);
     });
 
+    socket.on('envia-ply-simbolo', (plySimbolo, j1, j2) => {
+        socket.to(nome_socket[j1]).emit('envia-ply-simbolo', plySimbolo, j1, j2);
+        socket.to(nome_socket[j2]).emit('envia-ply-simbolo', plySimbolo, j1, j2);
+    });
 
 });
 
