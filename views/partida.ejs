@@ -112,16 +112,15 @@
         let contexto = canvas.getContext('2d');
         let ladoQuadrado = canvas.width
         canvas.height = canvas.width
+        let ply_simbolo = {};
         let vezDoJogador = decideQuemComeca();
         document.querySelector('span').innerText = vezDoJogador;
+        let j1 = document.getElementById('jogador1').value;
+        let j2 = document.getElementById('jogador2').value;
 
         socket.on('avisa-aos-jogadores-quem-comeca', (simbolo) => {
             alert('Quem começa: ' + simbolo);
             document.querySelector('span').innerText = simbolo;
-
-            let ply_simbolo = {};
-            let j1 = document.getElementById('jogador1').value;
-            let j2 = document.getElementById('jogador2').value;
 
             // avisa aos players o simbolo de cada um =======================================
             if (vezDoJogador == 'X') {
@@ -136,17 +135,27 @@
                 ply_simbolo[j2] = 'X';
             }
 
-            console.log('--------------------------------');
-            console.log(ply_simbolo);
-            console.log('--------------------------------');
-            alert(`
-                ${j1}: ${ply_simbolo[j1]}
-                ${j2}: ${ply_simbolo[j2]}
-            `);
+            socket.emit('envia-ply-simbolo', ply_simbolo, j1, j2);
+
+            // alert(`
+            //     ${j1}: ${ply_simbolo[j1]}
+            //     ${j2}: ${ply_simbolo[j2]}
+            // `);
+
             document.getElementById('jogador1').value += " - " + ply_simbolo[j1];
             document.getElementById('jogador2').value += " - " + ply_simbolo[j2];
 
             socket.emit('preencher-quem-eh-quem', ply_simbolo, j1, j2);
+
+        });
+
+        socket.on('envia-ply-simbolo', (plySimbolo, j1, j2) => {
+            ply_simbolo = plySimbolo;
+
+            console.log('--------------------------------');
+            console.log(ply_simbolo);
+            alert(ply_simbolo);
+            console.log('--------------------------------');
         });
 
         socket.on('preencher-quem-eh-quem', (ply_simbolo, j1, j2) => {
@@ -346,33 +355,39 @@
         }
 
         function cliqueNocanvas(event) {
-            // Obtenha as coordenadas do clique
-            var mouseX = event.clientX - canvas.getBoundingClientRect().left;
-            var mouseY = event.clientY - canvas.getBoundingClientRect().top;
 
-            // Exiba as coordenadas no console (opcional)
-            console.log('Posição do clique:', mouseX, mouseY);
+            if (ehSuaVezDeJogar()) {
+                // Obtenha as coordenadas do clique
+                var mouseX = event.clientX - canvas.getBoundingClientRect().left;
+                var mouseY = event.clientY - canvas.getBoundingClientRect().top;
 
-            casaClicada = verificarEmQualCasaFoiClicada(mouseX, mouseY);
+                // Exiba as coordenadas no console (opcional)
+                console.log('Posição do clique:', mouseX, mouseY);
 
-            tentarPreencherCasa()
+                casaClicada = verificarEmQualCasaFoiClicada(mouseX, mouseY);
 
-            let numCasasPreenchidas = 0
-            let tabelaPrintada = ""
-            for (let i = 1; i <= tabela.length; i++) {
-                if (tabela[i] != "") {
-                    numCasasPreenchidas++
+                tentarPreencherCasa()
+
+                let numCasasPreenchidas = 0
+                let tabelaPrintada = ""
+                for (let i = 1; i <= tabela.length; i++) {
+                    if (tabela[i] != "") {
+                        numCasasPreenchidas++
+                    }
+                    tabelaPrintada += tabela[i - 1] + " ";
+                    if (i % 3 == 0) {
+                        tabelaPrintada += "\n"
+                    }
                 }
-                tabelaPrintada += tabela[i - 1] + " ";
-                if (i % 3 == 0) {
-                    tabelaPrintada += "\n"
-                }
+
+                console.log(tabelaPrintada)
+                console.log("numCasasPreenchidas: " + numCasasPreenchidas)
+
+                verificarVitoria(numCasasPreenchidas)
             }
-
-            console.log(tabelaPrintada)
-            console.log("numCasasPreenchidas: " + numCasasPreenchidas)
-
-            verificarVitoria(numCasasPreenchidas)
+            else {
+                alert("Não é sua vez de jogar!!!")
+            }
         }
 
 
@@ -510,6 +525,10 @@
             document.querySelector('button').addEventListener('click', () => {
                 alert('Resetar Jogo');
             })
+        }
+
+        function ehSuaVezDeJogar() {
+            return vezDoJogador == ply_simbolo[nomeJogador];
         }
 
         // ===============================================================================
