@@ -97,28 +97,22 @@
             iniciarJogo();
         });
 
-        socket.on('quem-comeca-eh', (vez) => {
+        socket.on('quem-comeca-eh', (vez, jogSim) => {
             vezDoJogador = vez;
-
-            // decide quem eh quem
-            if (Math.floor(Math.random() * 2)) {
-                jogadorSimbolo[novaSala.jogador1] = 'X';
-                jogadorSimbolo[novaSala.jogador2] = 'O';
-            } else {
-                jogadorSimbolo[novaSala.jogador1] = 'O';
-                jogadorSimbolo[novaSala.jogador2] = 'X';
-            }
-
-            alert(`Eu, ${nomeJogadorNestaSala}, sou o ${jogadorSimbolo[nomeJogadorNestaSala]}`);
+            imagemSimbolo.src = vezDoJogador == "X" ? "/images/simbolo_X.png" : "/images/simbolo_O.png";
+            jogadorSimbolo = jogSim;
+            console.log(`Eu, ${nomeJogadorNestaSala}, sou o ${jogadorSimbolo[nomeJogadorNestaSala]}`);
 
             document.querySelector('#vezDoJogador').innerText = vezDoJogador;
+
+            // if (jogadorSimbolo[nomeJogadorNestaSala] == vezDoJogador) {
+            //     alert(`${nomeJogadorNestaSala}, você começa!`);
+            // } else {
+            //     alert(`${nomeJogadorNestaSala}, espere sua vez!`);
+            // }
         });
 
-
-
-
         // ============================== configuraces da partida ==============================
-
 
 
         // =================================== começar partida ===================================
@@ -130,7 +124,6 @@
         let vezDoJogador;
 
         let imagemSimbolo = new Image();
-        imagemSimbolo.src = vezDoJogador == "X" ? "/images/simbolo_X.png" : "/images/simbolo_O.png";
         let tabela = [
             '', '', '', '', '', '', '', '', '',
         ];
@@ -185,8 +178,12 @@
             }
         }
 
+        function casaPreenchida() {
+            return tabela[casaClicada - 1];
+        }
+
         function tentarPreencherCasa() {
-            if (tabela[casaClicada - 1]) {
+            if (casaPreenchida()) {
                 alert("Esta casa já foi preenchida!")
             } else {
                 desenharSimbolo(casaClicada)
@@ -315,33 +312,39 @@
         }
 
         function cliqueNocanvas(event) {
-            // Obtenha as coordenadas do clique
-            var mouseX = event.clientX - canvas.getBoundingClientRect().left;
-            var mouseY = event.clientY - canvas.getBoundingClientRect().top;
+            if (jogadorSimbolo[nomeJogadorNestaSala] == vezDoJogador) {
+                alert(`${nomeJogadorNestaSala}, sua vez!!!`);
 
-            // Exiba as coordenadas no console (opcional)
-            console.log('Posição do clique:', mouseX, mouseY);
+                // Obtenha as coordenadas do clique
+                var mouseX = event.clientX - canvas.getBoundingClientRect().left;
+                var mouseY = event.clientY - canvas.getBoundingClientRect().top;
 
-            casaClicada = verificarEmQualCasaFoiClicada(mouseX, mouseY);
+                // Exiba as coordenadas no console (opcional)
+                console.log('Posição do clique:', mouseX, mouseY);
 
-            tentarPreencherCasa()
+                casaClicada = verificarEmQualCasaFoiClicada(mouseX, mouseY);
 
-            let numCasasPreenchidas = 0
-            let tabelaPrintada = ""
-            for (let i = 1; i <= tabela.length; i++) {
-                if (tabela[i] != "") {
-                    numCasasPreenchidas++
+                tentarPreencherCasa()
+
+                let numCasasPreenchidas = 0
+                let tabelaPrintada = ""
+                for (let i = 1; i <= tabela.length; i++) {
+                    if (tabela[i] != "") {
+                        numCasasPreenchidas++
+                    }
+                    tabelaPrintada += tabela[i - 1] + " ";
+                    if (i % 3 == 0) {
+                        tabelaPrintada += "\n"
+                    }
                 }
-                tabelaPrintada += tabela[i - 1] + " ";
-                if (i % 3 == 0) {
-                    tabelaPrintada += "\n"
-                }
+
+                console.log(tabelaPrintada)
+                console.log("numCasasPreenchidas: " + numCasasPreenchidas)
+
+                verificarVitoria(numCasasPreenchidas)
+            } else {
+                alert(`${nomeJogadorNestaSala}, espere sua vez`);
             }
-
-            console.log(tabelaPrintada)
-            console.log("numCasasPreenchidas: " + numCasasPreenchidas)
-
-            verificarVitoria(numCasasPreenchidas)
         }
 
         let preeencherCasa = {
