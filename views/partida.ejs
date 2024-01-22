@@ -17,13 +17,16 @@
     <br>
     <label for="jogador1">Jogador 1: </label>
     <input type="text" name="jogador1" id="jogador1" value="<%= locals.salaGame.jogador1 %>">
+    <label for="jogador1">ID do Socket: <span id="idSocket"></span></label>
+    <br>
     <label for="jogador2">Jogador 2: </label>
     <input type="text" name="jogador2" id="jogador2" value="<%= locals.salaGame.jogador2 %>">
+    <label for="jogador1">ID do Socket 2: <span id="idSocket2"></span></label>
+    <br>
     <label for="jogador1">Número de Jogadores: </label>
     <input type="text" name="numJogadores" id="numJogadores" value="<%= locals.salaGame.numJogadores %>">
     <label for="jogador1">ID da Sala: </label>
     <input type="text" name="idSala" id="idSala" value="<%= locals.salaGame.id %>">
-    <label for="jogador1">ID do Socket: <div id="idSocket"></div></label>
 
     <div class="text-center mt-3">
         <canvas width="400"></canvas>
@@ -34,144 +37,83 @@
         </div>
     </div>
 
-    <h2 class="rodape text-center">Vez do Jogador: <span></span></h2>
+    <h2 class="rodape text-center">Vez do Jogador: <span id="vezDoJogador"></span></h2>
 
     <script src="/socket.io/socket.io.js"></script>
 
     <script>
         const socket = io();
-        let nomeJogador;
+        let nomeJogadorNestaSala;
+        let nomeJogadorConvidado;
 
         function getNameCookie() {
             let cookie = document.cookie;
             let indIgual = cookie.indexOf('=');
-            nomeJogador = cookie.substring(indIgual + 1, cookie.length);
+            nomeJogadorNestaSala = cookie.substring(indIgual + 1, cookie.length);
         }
         getNameCookie();
 
-        socket.emit('getMyIdSocket', nomeJogador);
-        socket.on('getMyId', (idSocket) => {
-            // document.querySelector('span').innerText = idSocket;
-            novaSala.idJ1 = idSocket;
-            document.getElementById('idSocket').innerText = idSocket;
-            // alert(idSocket);
-        });
-
-        let numJogadores = document.getElementById('numJogadores').value;
-        let idSala = document.getElementById('idSala').value;
-        let nomeSala = document.getElementById('nomeSala').value;
+        let idSala = document.querySelector('#idSala').value;
+        let nomeSala = document.querySelector('#nomeSala').value;
+        let criador = document.querySelector('#jogador1').value;
 
         let novaSala = {
-            id: idSala,
-            criador: document.getElementById('jogador1').value,
-            nome: nomeSala,
-            adversario: document.getElementById('numJogadores').value,
-            numJogadores: document.getElementById('numJogadores').value,
-            jogador1: document.getElementById('jogador1').value,
+            idSala: idSala,
+            nomeSala: nomeSala,
+            criador: criador,
+            jogador1: document.querySelector('#jogador1').value,
             jogador2: '',
-            idJ1: '',
-            idJ2: '',
-            quem_e_X: '',
-            quem_e_O: '',
-        }
+            idJogador1: document.querySelector('#idSocket').innerText,
+            idJogador2: '',
+        };
 
-        alert(numJogadores);
-        if (numJogadores == 2) {
-            alert('2 Jogadores')
-            socket.emit('preencher-2-player-aqui', novaSala, nomeJogador);
-        }
+        socket.emit('getMyIdSocket', nomeJogadorNestaSala);
+        socket.on('getMyId', (idSocket) => {
 
-        socket.on('nome-2-player-recebido', (nomeJogador) => {
-            document.getElementById('jogador2').value = nomeJogador;
-            document.getElementById('numJogadores').value = 2;
-
-            socket.emit('avisar-2-player', novaSala);
-        });
-
-        socket.on('preencher-seu-2-player', (nomeJogador) => {
-            document.getElementById('jogador2').value = nomeJogador;
-            novaSala.jogador2 = nomeJogador;
-            document.getElementById('numJogadores').value = 2;
-            iniciarJogo();
-            socket.emit('iniciar-jogo-players', nomeJogador);
-
-            let j2 = document.getElementById('jogador2').value;
-            socket.emit('avisa-aos-jogadores-quem-comeca', j2, vezDoJogador);
-        });
-
-        socket.on('iniciar-jogo-players', (jogador2) => {
-            alert('iniciarJogo');
-            document.querySelector('span').innerText = vezDoJogador;
-            iniciarJogo();
-            // socket.emit('avisa-aos-jogadores-quem-comeca', j2, vezDoJogador);
-        });
-
-        // ============================= começar partida =============================
-
-        let canvas = document.querySelector('canvas')
-        let contexto = canvas.getContext('2d');
-        let ladoQuadrado = canvas.width
-        canvas.height = canvas.width
-        let ply_simbolo = {};
-        let vezDoJogador = decideQuemComeca();
-        document.querySelector('span').innerText = vezDoJogador;
-        let j1 = document.getElementById('jogador1').value;
-        let j2 = document.getElementById('jogador2').value;
-
-        socket.on('avisa-aos-jogadores-quem-comeca', (simbolo) => {
-            alert('Quem começa: ' + simbolo);
-            document.querySelector('span').innerText = simbolo;
-
-            // avisa aos players o simbolo de cada um =======================================
-            if (vezDoJogador == 'X') {
-                novaSala.quem_e_X = novaSala.jogador1;
-                novaSala.quem_e_O = novaSala.jogador2;
-                ply_simbolo[j1] = 'X';
-                ply_simbolo[j2] = 'O';
+            if (novaSala.criador == nomeJogadorNestaSala) {
+                novaSala.idJogador1 = idSocket;
+                document.querySelector('#jogador1').value = nomeJogadorNestaSala
+                document.querySelector('#idSocket').innerText = idSocket;
             } else {
-                novaSala.quem_e_X = novaSala.jogador2;
-                novaSala.quem_e_O = novaSala.jogador1;
-                ply_simbolo[j1] = 'O';
-                ply_simbolo[j2] = 'X';
+                novaSala.jogador2 = nomeJogadorNestaSala;
+                novaSala.idJogador2 = idSocket;
+                document.querySelector('#jogador2').value = nomeJogadorNestaSala;
+                document.querySelector('#idSocket2').innerText = idSocket;
+                socket.emit('jogador2-entrou-na-sala', novaSala);
             }
-
-            socket.emit('envia-ply-simbolo', ply_simbolo, j1, j2);
-
-            // alert(`
-            //     ${j1}: ${ply_simbolo[j1]}
-            //     ${j2}: ${ply_simbolo[j2]}
-            // `);
-
-            document.getElementById('jogador1').value += " - " + ply_simbolo[j1];
-            document.getElementById('jogador2').value += " - " + ply_simbolo[j2];
-
-            socket.emit('preencher-quem-eh-quem', ply_simbolo, j1, j2);
-
         });
 
-        socket.on('envia-ply-simbolo', (plySimbolo, j1, j2) => {
-            ply_simbolo = plySimbolo;
-
-            console.log('--------------------------------');
-            console.log(ply_simbolo);
-            alert(ply_simbolo);
-            console.log('--------------------------------');
+        socket.on('completa-dados-jogadores', (room) => {
+            alert("Recebi room!!!");
+            novaSala = room;
+            alert(JSON.stringify(novaSala));
+            document.querySelector('#jogador1').value = novaSala.jogador1;
+            document.querySelector('#idSocket').innerText = novaSala.idJogador1;
+            document.querySelector('#jogador2').value = novaSala.jogador2;
+            document.querySelector('#jogador2').value = novaSala.jogador2;
+            document.querySelector('#numJogadores').value = 2;
+            iniciarJogo();
         });
 
-        socket.on('preencher-quem-eh-quem', (ply_simbolo, j1, j2) => {
-            alert("Recebi!!!!");
-            document.getElementById('jogador1').value += " - " + ply_simbolo[j1];
-            document.getElementById('jogador2').value += " - " + ply_simbolo[j2];
-        });
+        // ============================== configuraces da partida ==============================
 
 
-        let imagemSimbolo = new Image()
-        imagemSimbolo.src = vezDoJogador == "X" ? "/images/simbolo_X.png" : "/images/simbolo_O.png"
+
+        // =================================== começar partida ===================================
+
+        let canvas = document.querySelector('canvas');
+        let contexto = canvas.getContext('2d');
+        let ladoQuadrado = canvas.width;
+        canvas.height = canvas.width;
+        let vezDoJogador;
+
+        let imagemSimbolo = new Image();
+        imagemSimbolo.src = vezDoJogador == "X" ? "/images/simbolo_X.png" : "/images/simbolo_O.png";
         let tabela = [
             '', '', '', '', '', '', '', '', '',
-        ]
-        let cor = 'white'
-        let escala = 2
+        ];
+        let cor = 'black';
+        let escala = 2;
 
         function desenharLinha(cor, x0, y0, x, y) {
             contexto.lineWidth = 5;
@@ -191,10 +133,6 @@
             desenharLinha(cor, 0, ladoQuadrado / 3, ladoQuadrado, ladoQuadrado / 3);
             desenharLinha(cor, 0, ladoQuadrado * 2 / 3, ladoQuadrado, ladoQuadrado * 2 / 3);
 
-        }
-
-        function decideQuemComeca() {
-            return Math.floor(Math.random() * 2) == 1 ? "X" : "O";
         }
 
         function verificarEmQualCasaFoiClicada(mouseX, mouseY) {
@@ -233,7 +171,7 @@
                 vezDoJogador = vezDoJogador == "X" ? "O" : "X"
                 imagemSimbolo.src = vezDoJogador == "X" ? "/images/simbolo_X.png" : "/images/simbolo_O.png"
                 tabela[casaClicada - 1] = vezDoJogador
-                document.querySelector('span').textContent = vezDoJogador
+                document.querySelector('#vezDoJogador').textContent = vezDoJogador
             }
         }
 
@@ -262,7 +200,7 @@
                 let vencedor = diagonalS[1] == "X" ? "O" : "X"
                 desenharVitoria(diagonalS, "diagonalS")
             } else if (numCasasPreenchidas == 9) {
-                document.querySelector('span').textContent = "Deu velha"
+                document.querySelector('#vezDoJogador').textContent = "Deu velha"
                 canvas.removeEventListener('click', cliqueNocanvas)
             }
         }
@@ -351,45 +289,38 @@
             }
             canvas.removeEventListener('click', cliqueNocanvas)
             vezDoJogador = vezDoJogador == "X" ? "O" : "X"
-            document.querySelector('span').textContent = "Jogador " + vezDoJogador + " venceu!!!"
+            document.querySelector('#vezDoJogador').textContent = "Jogador " + vezDoJogador + " venceu!!!"
         }
 
         function cliqueNocanvas(event) {
+            // Obtenha as coordenadas do clique
+            var mouseX = event.clientX - canvas.getBoundingClientRect().left;
+            var mouseY = event.clientY - canvas.getBoundingClientRect().top;
 
-            if (ehSuaVezDeJogar()) {
-                // Obtenha as coordenadas do clique
-                var mouseX = event.clientX - canvas.getBoundingClientRect().left;
-                var mouseY = event.clientY - canvas.getBoundingClientRect().top;
+            // Exiba as coordenadas no console (opcional)
+            console.log('Posição do clique:', mouseX, mouseY);
 
-                // Exiba as coordenadas no console (opcional)
-                console.log('Posição do clique:', mouseX, mouseY);
+            casaClicada = verificarEmQualCasaFoiClicada(mouseX, mouseY);
 
-                casaClicada = verificarEmQualCasaFoiClicada(mouseX, mouseY);
+            tentarPreencherCasa()
 
-                tentarPreencherCasa()
-
-                let numCasasPreenchidas = 0
-                let tabelaPrintada = ""
-                for (let i = 1; i <= tabela.length; i++) {
-                    if (tabela[i] != "") {
-                        numCasasPreenchidas++
-                    }
-                    tabelaPrintada += tabela[i - 1] + " ";
-                    if (i % 3 == 0) {
-                        tabelaPrintada += "\n"
-                    }
+            let numCasasPreenchidas = 0
+            let tabelaPrintada = ""
+            for (let i = 1; i <= tabela.length; i++) {
+                if (tabela[i] != "") {
+                    numCasasPreenchidas++
                 }
-
-                console.log(tabelaPrintada)
-                console.log("numCasasPreenchidas: " + numCasasPreenchidas)
-
-                verificarVitoria(numCasasPreenchidas)
+                tabelaPrintada += tabela[i - 1] + " ";
+                if (i % 3 == 0) {
+                    tabelaPrintada += "\n"
+                }
             }
-            else {
-                alert("Não é sua vez de jogar!!!")
-            }
+
+            console.log(tabelaPrintada)
+            console.log("numCasasPreenchidas: " + numCasasPreenchidas)
+
+            verificarVitoria(numCasasPreenchidas)
         }
-
 
         let preeencherCasa = {
             1: () => {
@@ -487,6 +418,7 @@
                 case 3:
                     preeencherCasa[3]();
                     break
+                // =======================================================
                 case 4:
                     preeencherCasa[4]();
                     break
@@ -516,20 +448,19 @@
             criarAsLinhasDivisorias()
 
             // quem comeca
-            document.querySelector('span').textContent = vezDoJogador
+            document.querySelector('#vezDoJogador').textContent = vezDoJogador
 
             // identificar onde clicou no canvas
             canvas.addEventListener('click', cliqueNocanvas)
 
             // reiniciar game
             document.querySelector('button').addEventListener('click', () => {
-                alert('Resetar Jogo');
+                alert('Reiniciar partida!');
+                // location.reload()
             })
         }
 
-        function ehSuaVezDeJogar() {
-            return vezDoJogador == ply_simbolo[nomeJogador];
-        }
+        // iniciarJogo();
 
         // ===============================================================================
 
