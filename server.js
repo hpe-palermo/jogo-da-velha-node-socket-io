@@ -90,6 +90,10 @@ function criarNovaSala(link) {
 io.on('connection', (socket) => {
     console.log(`Cliente conectado: ${socket.id}`);
 
+    socket.on('disconnect', () => {
+        console.log(`Cliente desconectado: ${socket.id}`);
+    });
+
     socket.on('getMyIdSocket', (nomePlayer) => {
         nome_socket[nomePlayer] = socket.id;
         console.log('--------------------------------');
@@ -162,6 +166,7 @@ io.on('connection', (socket) => {
         console.log('De ' + senderID + ' para ' + receivedID);
 
         console.log("------------ SALA GLOBAL ------------");
+        salaGlobal.idJ2 = receivedID;
         console.log(salaGlobal);
         console.log(salaGlobal.jogador2);
 
@@ -171,9 +176,28 @@ io.on('connection', (socket) => {
 
     socket.on('iniciar-jogo-players', (jogador2) => {
         let idSocketJ2 = nome_socket[jogador2];
-        console.log('Inicie seu jogo '+jogador2);
+        console.log('Inicie seu jogo ' + jogador2);
         socket.to(idSocketJ2).emit('iniciar-jogo-players', '');
         socket.to(socket.id).emit('iniciar-jogo-players', '');
+    });
+
+    socket.on('avisa-aos-jogadores-quem-comeca', (jogador2, simbolo) => {
+        // console.log("Sender: " + socket.id);
+        // console.log('jogador2: ' + jogador2);
+        // console.log("Received: " + nome_socket[jogador2]);
+        socket.to(nome_socket[jogador2]).emit('avisa-aos-jogadores-quem-comeca', simbolo);
+        socket.to(socket.id).emit('avisa-aos-jogadores-quem-comeca', simbolo);
+    });
+
+    socket.on('preencher-quem-eh-quem', (ply_simbolo, j1, j2) => {
+        console.log('jogador: ' + j1);
+        console.log('jogador2: ' + j2);
+
+        console.log("Sender: " + nome_socket[j1]);
+        console.log("Received: " + nome_socket[j2]);
+
+        socket.to(nome_socket[j1]).emit('preencher-quem-eh-quem', ply_simbolo, j1, j2);
+        socket.to(nome_socket[j2]).emit('preencher-quem-eh-quem', ply_simbolo, j1, j2);
     });
 
 
