@@ -23,8 +23,7 @@
     <input type="text" name="numJogadores" id="numJogadores" value="<%= locals.salaGame.numJogadores %>">
     <label for="jogador1">ID da Sala: </label>
     <input type="text" name="idSala" id="idSala" value="<%= locals.salaGame.id %>">
-
-    <!-- <div> meu id: <span></span></div> -->
+    <label for="jogador1">ID do Socket: <div id="idSocket"></div></label>
 
     <div class="text-center mt-3">
         <canvas width="400"></canvas>
@@ -54,7 +53,8 @@
         socket.on('getMyId', (idSocket) => {
             // document.querySelector('span').innerText = idSocket;
             novaSala.idJ1 = idSocket;
-            alert(idSocket);
+            document.getElementById('idSocket').innerText = idSocket;
+            // alert(idSocket);
         });
 
         let numJogadores = document.getElementById('numJogadores').value;
@@ -70,7 +70,9 @@
             jogador1: document.getElementById('jogador1').value,
             jogador2: '',
             idJ1: '',
-            idJ2: ''
+            idJ2: '',
+            quem_e_X: '',
+            quem_e_O: '',
         }
 
         alert(numJogadores);
@@ -88,14 +90,20 @@
 
         socket.on('preencher-seu-2-player', (nomeJogador) => {
             document.getElementById('jogador2').value = nomeJogador;
+            novaSala.jogador2 = nomeJogador;
             document.getElementById('numJogadores').value = 2;
             iniciarJogo();
             socket.emit('iniciar-jogo-players', nomeJogador);
+
+            let j2 = document.getElementById('jogador2').value;
+            socket.emit('avisa-aos-jogadores-quem-comeca', j2, vezDoJogador);
         });
 
         socket.on('iniciar-jogo-players', (jogador2) => {
             alert('iniciarJogo');
+            document.querySelector('span').innerText = vezDoJogador;
             iniciarJogo();
+            // socket.emit('avisa-aos-jogadores-quem-comeca', j2, vezDoJogador);
         });
 
         // ============================= começar partida =============================
@@ -104,7 +112,50 @@
         let contexto = canvas.getContext('2d');
         let ladoQuadrado = canvas.width
         canvas.height = canvas.width
-        let vezDoJogador = decideQuemComeca()
+        let vezDoJogador = decideQuemComeca();
+        document.querySelector('span').innerText = vezDoJogador;
+
+        socket.on('avisa-aos-jogadores-quem-comeca', (simbolo) => {
+            alert('Quem começa: ' + simbolo);
+            document.querySelector('span').innerText = simbolo;
+
+            let ply_simbolo = {};
+            let j1 = document.getElementById('jogador1').value;
+            let j2 = document.getElementById('jogador2').value;
+
+            // avisa aos players o simbolo de cada um =======================================
+            if (vezDoJogador == 'X') {
+                novaSala.quem_e_X = novaSala.jogador1;
+                novaSala.quem_e_O = novaSala.jogador2;
+                ply_simbolo[j1] = 'X';
+                ply_simbolo[j2] = 'O';
+            } else {
+                novaSala.quem_e_X = novaSala.jogador2;
+                novaSala.quem_e_O = novaSala.jogador1;
+                ply_simbolo[j1] = 'O';
+                ply_simbolo[j2] = 'X';
+            }
+
+            console.log('--------------------------------');
+            console.log(ply_simbolo);
+            console.log('--------------------------------');
+            alert(`
+                ${j1}: ${ply_simbolo[j1]}
+                ${j2}: ${ply_simbolo[j2]}
+            `);
+            document.getElementById('jogador1').value += " - " + ply_simbolo[j1];
+            document.getElementById('jogador2').value += " - " + ply_simbolo[j2];
+
+            socket.emit('preencher-quem-eh-quem', ply_simbolo, j1, j2);
+        });
+
+        socket.on('preencher-quem-eh-quem', (ply_simbolo, j1, j2) => {
+            alert("Recebi!!!!");
+            document.getElementById('jogador1').value += " - " + ply_simbolo[j1];
+            document.getElementById('jogador2').value += " - " + ply_simbolo[j2];
+        });
+
+
         let imagemSimbolo = new Image()
         imagemSimbolo.src = vezDoJogador == "X" ? "/images/simbolo_X.png" : "/images/simbolo_O.png"
         let tabela = [
@@ -460,7 +511,6 @@
                 alert('Resetar Jogo');
             })
         }
-
 
         // ===============================================================================
 
