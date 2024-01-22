@@ -65,6 +65,11 @@ function criarNovaSala(link) {
             let dados = {
                 salaGame: salaGlobal
             };
+            console.log('----------------------- dados --------------------------');
+            console.log();
+            console.log(dados);
+            console.log();
+            console.log('--------------------------------------------------------');
             console.log("numJogadores: " + salaGame.numJogadores)
 
             if (salaGame.numJogadores == 1) {
@@ -159,53 +164,39 @@ io.on('connection', (socket) => {
         socket.emit('nome-2-player-recebido', nome);
     });
 
-    socket.on('avisar-2-player', (salaGame) => {
-        let senderID = nome_socket[salaGlobal.jogador1];
-        let receivedID = nome_socket[salaGlobal.jogador2];
+    socket.on('jogador2-entrou-na-sala', (novaSala) => {
+        let senderID = socket.id; // Usando o próprio socket para obter o ID do remetente
+        let receivedID = nome_socket[novaSala.jogador1];
+        novaSala.idJogador1 = receivedID;
 
-        console.log('De ' + senderID + ' para ' + receivedID);
+        console.log("----- jogador2-entrou-na-sala ------");
+        console.log(novaSala);
+        console.log("senderID: " + senderID);
+        console.log("receivedID: " + receivedID);
+        console.log("------------------------------------");
 
-        console.log("------------ SALA GLOBAL ------------");
-        salaGlobal.idJ2 = receivedID;
-        console.log(salaGlobal);
-        console.log(salaGlobal.jogador2);
-
-        socket.to(receivedID).emit('preencher-seu-2-player', salaGlobal.jogador2);
-        socket.to(senderID).emit('preencher-seu-2-player', salaGlobal.jogador2);
+        // Certifique-se de que os IDs são diferentes antes de emitir os eventos
+        if (senderID !== receivedID) {
+            // Emitir para o jogador1
+            socket.to(receivedID).emit('completa-dados-jogadores', novaSala);
+            // Emitir para o jogador2 (o próprio remetente)
+            socket.emit('completa-dados-jogadores', novaSala);
+        }
     });
 
-    socket.on('iniciar-jogo-players', (jogador2) => {
-        let idSocketJ2 = nome_socket[jogador2];
-        console.log('Inicie seu jogo ' + jogador2);
-        socket.to(idSocketJ2).emit('iniciar-jogo-players', '');
-        socket.to(socket.id).emit('iniciar-jogo-players', '');
+    socket.on('', (_) => {
+
     });
 
-    socket.on('avisa-aos-jogadores-quem-comeca', (jogador2, simbolo) => {
-        // console.log("Sender: " + socket.id);
-        // console.log('jogador2: ' + jogador2);
-        // console.log("Received: " + nome_socket[jogador2]);
-        socket.to(nome_socket[jogador2]).emit('avisa-aos-jogadores-quem-comeca', simbolo);
-        socket.to(socket.id).emit('avisa-aos-jogadores-quem-comeca', simbolo);
-    });
+    // socket.on('', (_) => {
 
-    socket.on('preencher-quem-eh-quem', (ply_simbolo, j1, j2) => {
-        console.log('jogador: ' + j1);
-        console.log('jogador2: ' + j2);
-
-        console.log("Sender: " + nome_socket[j1]);
-        console.log("Received: " + nome_socket[j2]);
-
-        socket.to(nome_socket[j1]).emit('preencher-quem-eh-quem', ply_simbolo, j1, j2);
-        socket.to(nome_socket[j2]).emit('preencher-quem-eh-quem', ply_simbolo, j1, j2);
-    });
-
-    socket.on('envia-ply-simbolo', (plySimbolo, j1, j2) => {
-        socket.to(nome_socket[j1]).emit('envia-ply-simbolo', plySimbolo, j1, j2);
-        socket.to(nome_socket[j2]).emit('envia-ply-simbolo', plySimbolo, j1, j2);
-    });
+    // });
 
 });
+
+function decideQuemComeca() {
+    return Math.floor(Math.random() * 2) == 1 ? "X" : "O";
+}
 
 server.listen(3000, () => {
     console.log(`Servidor ouvindo na porta http://localhost:3000`);
