@@ -184,8 +184,16 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('', (_) => {
+    socket.on('decide-quem-comeca', (novaSala) => {
+        let senderID = nome_socket[novaSala.jogador1];
+        let receivedID = nome_socket[novaSala.jogador2];
 
+        let vez = decideQuemComeca();
+
+        if (senderID !== receivedID) {
+            socket.to(receivedID).emit('quem-comeca-eh', vez);
+            socket.emit('quem-comeca-eh', vez);
+        }
     });
 
     // socket.on('', (_) => {
