@@ -105,15 +105,7 @@
 
             document.querySelector('#vezDoJogador').innerText = vezDoJogador;
 
-            // if (jogadorSimbolo[nomeJogadorNestaSala] == vezDoJogador) {
-            //     alert(`${nomeJogadorNestaSala}, você começa!`);
-            // } else {
-            //     alert(`${nomeJogadorNestaSala}, espere sua vez!`);
-            // }
         });
-
-        // ============================== configuraces da partida ==============================
-
 
         // =================================== começar partida ===================================
 
@@ -466,7 +458,14 @@
                 default:
                     break
             }
+            socket.emit('joguei-na-casa', casaClicada, nomeJogadorNestaSala, novaSala);
         }
+
+        socket.on('adversario-jogou-na-casa', (msg, casaClicada) => {
+            alert(msg);
+            preeencherCasa[casaClicada]();
+            vezDoJogador = vezDoJogador == 'X' ? 'O' : 'X';
+        });
 
         function iniciarJogo() {
 
