@@ -205,9 +205,20 @@ io.on('connection', (socket) => {
         }
     });
 
-    // socket.on('', (_) => {
+    socket.on('joguei-na-casa', (casaClicada, nomeJogadorNestaSala, novaSala) => {
+        let msg = `${nomeJogadorNestaSala} jogou na casa ${casaClicada}!!!`;
+        console.log(msg);
 
-    // });
+        let receivedID;
+        if (novaSala.criador == nomeJogadorNestaSala) {
+            receivedID = nome_socket[novaSala.jogador2];
+        } else {
+            receivedID = nome_socket[novaSala.jogador1];
+        }
+
+        console.log('enviando para '+receivedID);
+        socket.to(receivedID).emit('adversario-jogou-na-casa', msg, casaClicada  );
+    });
 
 });
 
