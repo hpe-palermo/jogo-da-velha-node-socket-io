@@ -21,7 +21,7 @@ let socketConnected = {};
 io.on('connection', (socket) => {
     console.log('a user connected');
     // list players connected
-    io.emit('list-players', playersConnected);
+    if (playersConnected) io.emit('list-players', playersConnected);
 
     socket.on('disconnect', () => {
         console.log('user disconnected');
@@ -30,9 +30,9 @@ io.on('connection', (socket) => {
     socket.on('save-nickname', (myNickname, myID_nickname) => {
         // check the nickname
         let myId = -1;
+        let accepted = false;
         let state = checkNickname(myNickname);
         if (state == 'Accepted nickname!') {
-
 
             // check if nickname is already
             if (myID_nickname == -1) {
@@ -45,9 +45,17 @@ io.on('connection', (socket) => {
             console.log('Accepted nickname: ' + myNickname);
             console.log('ID nickname: ' + myId);
 
-            io.emit('list-players', playersConnected);
-        };
-        socket.emit('state-nickname', state, myId);
+            accepted = true;
+        }
+
+        socket.emit('state-nickname', state, accepted, myId);
+        io.emit('list-players', playersConnected);
+    });
+
+    socket.on('delete player', (myID_nickname) => {
+        // delete player
+        playersConnected.splice(myID_nickname, 1);
+        io.emit('list-players', playersConnected);
     });
 
 });
