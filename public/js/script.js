@@ -24,10 +24,10 @@ socket.on('list-players', (playersConnected) => {
 });
 
 // message of error of nickname
-socket.on('state-nickname', (msgError, myId) => {
-    if (myId != -1) {
+socket.on('state-nickname', (msgError, accepted, myId) => {
+    if (accepted) {
         myID_nickname = myId;
-        alert('my id nickname: '+ myID_nickname);
+        alert('my id nickname: ' + myID_nickname);
     }
     stateNickname.innerText = msgError;
 });
@@ -72,7 +72,7 @@ function renderElements() {
             `);
             elementToRender +=
                 `
-            <button class="btn btn-danger m-1">Delete</button>
+            <button class="btn btn-danger m-1" onclick="deletePlayer()">Delete</button>
             `;
         } else {
             elementToRender +=
@@ -91,4 +91,8 @@ function renderElements() {
     });
 
     namesPlayerToRender = [];
+}
+
+function deletePlayer() {
+    socket.emit('delete player', myID_nickname);
 }
