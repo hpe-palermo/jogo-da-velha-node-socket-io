@@ -1,0 +1,12 @@
+#inputs {
+    border-bottom: 1px solid #fff;
+}
+
+#player {
+    border: 1px solid #fff;
+    border-radius: 10px;
+}
+
+#state-nickname {
+    transform: translate(0, 10px);
+}

@@ -1,10 +1,10 @@
 {
-  "name": "chat-node",
+  "name": "jogo-da-velha",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
-    "dev": "nodemon server.js"
+    "dev": "nodemon app.js"
   },
   "keywords": [],
   "author": "",
