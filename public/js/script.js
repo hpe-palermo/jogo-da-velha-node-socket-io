@@ -10,6 +10,7 @@ let namesPlayerToRender = [];
 let stateNickname = document.getElementById('state-nickname');
 let btnSend = document.getElementById('btnSend');
 let myID_nickname = -1;
+let my_nickname = '';
 
 // input my nickname
 btnSend.addEventListener('click', () => {
@@ -27,6 +28,7 @@ socket.on('list-players', (playersConnected) => {
 socket.on('state-nickname', (msgError, accepted, myId) => {
     if (accepted) {
         myID_nickname = myId;
+        my_nickname = myNickname.value;
         alert('my id nickname: ' + myID_nickname);
     }
     stateNickname.innerText = msgError;
@@ -56,6 +58,8 @@ function renderElements() {
     listPlayers.innerHTML = '';
 
     let elementToRender = '';
+    console.log('----------------------------------------------------------------');
+    console.log(namesPlayerToRender);
     namesPlayerToRender.forEach((player, index) => {
         let nameCapitalized = player.charAt(0).toUpperCase() + player.slice(1);
         elementToRender +=
@@ -64,12 +68,8 @@ function renderElements() {
             <h3 class="m-2" id="namePlayer">${index} - ${nameCapitalized}</h3>
             <div>
         `;
-        if (myID_nickname == index) {
-            console.log(`
-                This nickname:
-                ID: ${myID_nickname}
-                Nickname: ${myNickname.value}
-            `);
+        if (my_nickname.toLowerCase() == player) {
+            myID_nickname = index;
             elementToRender +=
                 `
             <button class="btn btn-danger m-1" onclick="deletePlayer()">Delete</button>
