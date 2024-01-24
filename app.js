@@ -15,13 +15,14 @@ app.use(express.static(join(__dirname, 'public')));
 app.use('/', router);
 
 let namespacePartida;
-let playersConnected = [];
 let socketConnected = {};
+let playersConnected = [];
+let playersWithoutOpponent = [];
 
 io.on('connection', (socket) => {
     console.log('a user connected');
     // list players connected
-    io.emit('list-players', playersConnected);
+    io.emit('list-players', playersWithoutOpponent);
 
     socket.on('disconnect', () => {
         console.log('user disconnected');
@@ -37,8 +38,10 @@ io.on('connection', (socket) => {
             // check if nickname is already
             if (myID_nickname == -1) {
                 playersConnected.push(myNickname.toLowerCase());
+                playersWithoutOpponent.push(myNickname.toLowerCase());
             } else {
                 playersConnected[myID_nickname] = myNickname.toLowerCase();
+                playersWithoutOpponent[myID_nickname] = myNickname.toLowerCase();
             }
 
             myId = playersConnected.length - 1;
@@ -49,14 +52,16 @@ io.on('connection', (socket) => {
         }
 
         console.log(playersConnected);
+        console.log(playersWithoutOpponent);
         socket.emit('state-nickname', state, accepted, myId);
-        io.emit('list-players', playersConnected);
+        io.emit('list-players', playersWithoutOpponent);
     });
 
     socket.on('delete player', (myID_nickname) => {
         // delete player
         playersConnected.splice(myID_nickname, 1);
-        io.emit('list-players', playersConnected);
+        playersWithoutOpponent.splice(myID_nickname, 1);
+        io.emit('list-players', playersWithoutOpponent);
     });
 
 });
@@ -65,7 +70,7 @@ function checkNickname(myNickname) {
     if (!myNickname) {
         // is empty
         return 'Nickname cannot be empty!';
-    } else if (playersConnected.includes(myNickname.toLowerCase())) {
+    } else if (playersWithoutOpponent.includes(myNickname.toLowerCase())) {
         // already exists
         return 'This nickname already exists!';
     } else {
