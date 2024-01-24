@@ -37,11 +37,12 @@ socket.on('state-nickname', (msgError, accepted, myId) => {
     if (accepted) {
         myID_nickname = myId;
         my_nickname = myNickname.value;
+        document.cookie = 'username='+myNickname.value;
     }
     stateNickname.innerText = msgError;
 });
 
-socket.on('acess-link-room', (link) => {
+socket.on('access-link-room', (link) => {
     window.location.href = link;
 })
 
@@ -110,8 +111,13 @@ function deletePlayer() {
 }
 
 function playWith(nameCapitalized) {
-    alert(my_nickname+" entrou na sala");
-    socket.emit('play-with', my_nickname, nameCapitalized);
+    if (myNickname.value) {
+        alert(my_nickname + " entrou na sala");
+        socket.emit('play-with', my_nickname, nameCapitalized);
+    } else {
+        alert('Enter with nickname');
+    }
+
 }
 
 // when the user go out of the room
