@@ -30,6 +30,10 @@ io.on('connection', (socket) => {
         console.log('user disconnected');
     });
 
+    socket.on('getMyId', (_) => {
+        socket.emit('getMyId', socket.id);
+    });
+
     socket.on('save-nickname', (myNickname, myID_nickname) => {
         // check the nickname
         let myId = -1;
@@ -57,6 +61,9 @@ io.on('connection', (socket) => {
                 jogador2: '',
                 link: '',
             });
+
+            socketConnected[myNickname] = socket.id;
+            console.log(socketConnected);
         }
 
         console.log(playersConnected);
@@ -94,11 +101,16 @@ io.on('connection', (socket) => {
         let roomUpdate = rooms.filter(room => room.jogador1 != jogador2);
         rooms = roomUpdate;
         console.log(rooms);
-    
+
         // access the link room
-        makeLinkRoom(room.link);
+        makeLinkRoom(room.link, jogador1, jogador2);
 
         io.emit('list-players', playersWithoutOpponent);
+        
+        // send the link to both players
+        io.to(socketConnected[jogador1]).emit('acess-link-room', room.link);
+        io.to(socketConnected[jogador2]).emit('acess-link-room', room.link);
+
     });
 
     socket.on('unload', (my_nickname) => {
@@ -107,9 +119,10 @@ io.on('connection', (socket) => {
 
 });
 
-function makeLinkRoom(linkRoom) {
+function makeLinkRoom(linkRoom, jogador1, jogador2) {
     app.get(linkRoom, (req, res) => {
         // set link room
+        res.render('partida', { jogador1: jogador1, jogador2: jogador2 });
     });
 }
 
