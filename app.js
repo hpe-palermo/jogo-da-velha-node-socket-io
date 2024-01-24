@@ -18,6 +18,7 @@ let namespacePartida;
 let socketConnected = {};
 let playersConnected = [];
 let playersWithoutOpponent = [];
+let playersPlayingNow = [];
 let rooms = [];
 
 io.on('connection', (socket) => {
@@ -50,6 +51,12 @@ io.on('connection', (socket) => {
             console.log('ID nickname: ' + myId);
 
             accepted = true;
+
+            rooms.push({
+                jogador1: myNickname,
+                jogador2: '',
+                link: '',
+            });
         }
 
         console.log(playersConnected);
@@ -66,6 +73,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('play-with', (jogador2, jogador1) => {
+        // make a room to two players and remove them from the list playersWithoutOpponent
         let indexJ2 = playersWithoutOpponent.indexOf(jogador2);
         playersWithoutOpponent.splice(indexJ2, 1);
 
@@ -75,7 +83,20 @@ io.on('connection', (socket) => {
         console.log(`${jogador2} entrou na sala com ${jogador1}`);
         console.log(playersWithoutOpponent);
 
+        // make link if room
+        console.log('room game');
+        let room = rooms.find(room => room.jogador1 == jogador1);
+        room.jogador2 = jogador2;
+        room.link = `/${jogador1}-${jogador2}`;
+        console.log(room);
+
+        // delete room from other player
+
         io.emit('list-players', playersWithoutOpponent);
+    });
+
+    socket.on('unload', (my_nickname) => {
+        console.log(`${my_nickname} saiu da sala`);
     });
 
 });
