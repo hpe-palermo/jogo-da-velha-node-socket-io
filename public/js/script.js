@@ -103,3 +103,8 @@ function playWith(nameCapitalized) {
     alert(my_nickname+" entrou na sala");
     socket.emit('play-with', my_nickname, nameCapitalized);
 }
+
+// when the user go out of the room
+window.addEventListener('beforeunload', () => {
+    socket.emit('unload', my_nickname);
+});
