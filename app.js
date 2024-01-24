@@ -18,7 +18,6 @@ let namespacePartida;
 let socketConnected = {};
 let playersConnected = [];
 let playersWithoutOpponent = [];
-let playersPlayingNow = [];
 let rooms = [];
 
 io.on('connection', (socket) => {
@@ -106,23 +105,96 @@ io.on('connection', (socket) => {
         makeLinkRoom(room.link, jogador1, jogador2);
 
         io.emit('list-players', playersWithoutOpponent);
-        
+
         // send the link to both players
-        io.to(socketConnected[jogador1]).emit('acess-link-room', room.link);
-        io.to(socketConnected[jogador2]).emit('acess-link-room', room.link);
+        io.to(socketConnected[jogador1]).emit('access-link-room', room.link);
+        io.to(socketConnected[jogador2]).emit('access-link-room', room.link);
 
     });
 
     socket.on('unload', (my_nickname) => {
         console.log(`${my_nickname} saiu da sala`);
+
+        let index = playersConnected.indexOf(my_nickname);
+        playersConnected.splice(index, 1);
+
+        index = playersWithoutOpponent.indexOf(my_nickname);
+        playersWithoutOpponent.splice(index, 1);
+
+        io.emit('list-players', playersWithoutOpponent);
+    });
+
+    socket.on('can i stay here', (link, cookie) => {
+        console.log('checking permission... ');
+        let name = cookie.split('=')[1];
+        if (link.includes(name)) {
+            socket.emit('can i stay here', true);
+            playersConnected.push(name);
+            socketConnected[name] = socket.id;
+            console.log('reconnecting... ');
+            console.log('reconnected: ' + name);
+        } else {
+            socket.emit('can i stay here', false);
+        }
+    });
+
+    // settings of match =================================
+    socket.on('creator-in-room', (nameRoom, jogador1, jogador2) => {
+        // join jogador1 in room
+        socket.join(nameRoom);
+        console.log('Sockets in room ' + nameRoom + ':', io.sockets.adapter.rooms.get(nameRoom));
+        console.log(jogador1 + ' in room');
+
+        // invite jogador2 to room
+        console.log('waiting the next player...');
+        socket.to(socketConnected[jogador2]).emit('invite player2', nameRoom);
+    });
+
+    socket.on('player2-in-room', (nameRoom, jogador1, jogador2) => {
+        // join jogador2 in room
+        socket.join(nameRoom);
+        console.log('Sockets in room ' + nameRoom + ':', io.sockets.adapter.rooms.get(nameRoom));
+        console.log(jogador2 + ' in room');
+
+        console.log('nameRoom: ' + nameRoom);
+        console.log('jogador1:' + jogador1);
+        console.log('jogador2:' + jogador2);
+        console.log('idJogador1:' + socketConnected[jogador1]);
+        console.log('idJogador2:' + socketConnected[jogador2]);
+        socket.to(socketConnected[jogador1]).emit('joined-in-room', 'Welcome to room players!!!');
+        socket.emit('joined-in-room', 'Welcome to room players!!!');
+    });
+
+    socket.on('whoPlayNow', (whoPlayNow, whoPlayed, clickedHouse, player1, player2) => {
+        whoPlayNow = whoPlayNow == "X" ? "O" : "X";
+        let receivedId;
+        if (whoPlayed == player1) {
+            receivedId = socketConnected[player2];
+        } else {
+            receivedId = socketConnected[player1];
+        }
+        socket.to(receivedId).emit('whoPlayNow', whoPlayNow, clickedHouse);
+        socket.emit('whoPlayNow', whoPlayNow, clickedHouse);
+    });
+
+    socket.on('change turn and show', (whoPlayNow, player1, player2) => {
+        whoPlayNow = whoPlayNow == "X" ? "O" : "X";
+        let receivedId;
+        if (socket.id == socketConnected[player1]) {
+            receivedId = socketConnected[player2];
+        } else {
+            receivedId = socketConnected[player1];
+        }
+        socket.to(receivedId).emit('change turn and show', whoPlayNow);
+        socket.emit('change turn and show', whoPlayNow);
     });
 
 });
 
-function makeLinkRoom(linkRoom, jogador1, jogador2) {
+function makeLinkRoom(linkRoom, player1, player2) {
     app.get(linkRoom, (req, res) => {
         // set link room
-        res.render('partida', { jogador1: jogador1, jogador2: jogador2 });
+        res.render('partida', { player1: player1, player2: player2 });
     });
 }
 
