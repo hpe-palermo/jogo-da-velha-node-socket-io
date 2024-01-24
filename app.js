@@ -18,6 +18,7 @@ let namespacePartida;
 let socketConnected = {};
 let playersConnected = [];
 let playersWithoutOpponent = [];
+let rooms = [];
 
 io.on('connection', (socket) => {
     console.log('a user connected');
@@ -61,6 +62,19 @@ io.on('connection', (socket) => {
         // delete player
         playersConnected.splice(myID_nickname, 1);
         playersWithoutOpponent.splice(myID_nickname, 1);
+        io.emit('list-players', playersWithoutOpponent);
+    });
+
+    socket.on('play-with', (jogador2, jogador1) => {
+        let indexJ2 = playersWithoutOpponent.indexOf(jogador2);
+        playersWithoutOpponent.splice(indexJ2, 1);
+
+        let indexJ1 = playersWithoutOpponent.indexOf(jogador1);
+        playersWithoutOpponent.splice(indexJ1, 1);
+
+        console.log(`${jogador2} entrou na sala com ${jogador1}`);
+        console.log(playersWithoutOpponent);
+
         io.emit('list-players', playersWithoutOpponent);
     });
 
