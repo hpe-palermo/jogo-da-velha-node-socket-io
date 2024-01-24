@@ -79,7 +79,7 @@ function renderElements() {
         } else {
             elementToRender +=
                 `
-                <button class="btn btn-success m-1">Play</button>
+                <button class="btn btn-success m-1" onclick="playWith('${nameCapitalized}')">Play</button>
             `;
         }
         elementToRender +=
@@ -97,4 +97,9 @@ function renderElements() {
 
 function deletePlayer() {
     socket.emit('delete player', myID_nickname);
+}
+
+function playWith(nameCapitalized) {
+    alert(my_nickname+" entrou na sala");
+    socket.emit('play-with', my_nickname, nameCapitalized);
 }
