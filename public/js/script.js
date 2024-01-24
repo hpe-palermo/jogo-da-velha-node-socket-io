@@ -1,5 +1,12 @@
 let socket = io();
 
+let myIdSocket;
+socket.emit('getMyId', '');
+socket.on('getMyId', (id) => {
+    myIdSocket = id;
+    alert('My id: ' + myIdSocket);
+});
+
 let myNickname = document.getElementById('myNickname');
 let findPlayer = document.getElementById('findPlayer');
 let listPlayers = document.querySelectorAll('h3');
@@ -30,10 +37,13 @@ socket.on('state-nickname', (msgError, accepted, myId) => {
     if (accepted) {
         myID_nickname = myId;
         my_nickname = myNickname.value;
-        // alert('my id nickname: ' + myID_nickname);
     }
     stateNickname.innerText = msgError;
 });
+
+socket.on('acess-link-room', (link) => {
+    window.location.href = link;
+})
 
 // fill the list of names
 listPlayers.forEach((player) => {
