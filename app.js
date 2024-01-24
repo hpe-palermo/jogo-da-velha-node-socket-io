@@ -15,13 +15,13 @@ app.use(express.static(join(__dirname, 'public')));
 app.use('/', router);
 
 let namespacePartida;
-let playersConnected = ['Joao']; // delete this name, became this liist empty!
+let playersConnected = [];
 let socketConnected = {};
 
 io.on('connection', (socket) => {
     console.log('a user connected');
     // list players connected
-    if (playersConnected) io.emit('list-players', playersConnected);
+    io.emit('list-players', playersConnected);
 
     socket.on('disconnect', () => {
         console.log('user disconnected');
@@ -48,6 +48,7 @@ io.on('connection', (socket) => {
             accepted = true;
         }
 
+        console.log(playersConnected);
         socket.emit('state-nickname', state, accepted, myId);
         io.emit('list-players', playersConnected);
     });
