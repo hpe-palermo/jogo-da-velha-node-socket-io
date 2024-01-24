@@ -91,6 +91,12 @@ io.on('connection', (socket) => {
         console.log(room);
 
         // delete room from other player
+        let roomUpdate = rooms.filter(room => room.jogador1 != jogador2);
+        rooms = roomUpdate;
+        console.log(rooms);
+    
+        // access the link room
+        makeLinkRoom(room.link);
 
         io.emit('list-players', playersWithoutOpponent);
     });
@@ -100,6 +106,12 @@ io.on('connection', (socket) => {
     });
 
 });
+
+function makeLinkRoom(linkRoom) {
+    app.get(linkRoom, (req, res) => {
+        // set link room
+    });
+}
 
 function checkNickname(myNickname) {
     if (!myNickname) {
