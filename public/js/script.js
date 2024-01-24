@@ -20,6 +20,7 @@ btnSend.addEventListener('click', () => {
 
 // list players connected to server
 socket.on('list-players', (playersConnected) => {
+    namesPlayer = playersConnected;
     namesPlayerToRender = playersConnected;
     renderElements();
 });
@@ -29,7 +30,7 @@ socket.on('state-nickname', (msgError, accepted, myId) => {
     if (accepted) {
         myID_nickname = myId;
         my_nickname = myNickname.value;
-        alert('my id nickname: ' + myID_nickname);
+        // alert('my id nickname: ' + myID_nickname);
     }
     stateNickname.innerText = msgError;
 });
@@ -42,6 +43,7 @@ listPlayers.forEach((player) => {
 
 findPlayer.addEventListener('input', () => {
     // filter players
+    // alert('-> '+namesPlayer);
     namesPlayer.forEach((player) => {
         // players
         if (player.toLowerCase().includes(findPlayer.value.toLowerCase())) {
