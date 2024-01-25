@@ -48,6 +48,7 @@ let listButtons = document.querySelectorAll('[id^="btn-cell"]');
 console.log(listButtons);
 let tableGame = [];
 let numCellClicked = 0;
+let btnPlayAgain = document.querySelector('#reload');
 
 listButtons.forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -84,8 +85,9 @@ socket.on('whoPlayNow', (this_clickWhere, this_whoPlayNow, table, won, this_numC
                 alert('You lose!!!');
             }
         }
+        btnPlayAgain.style.visibility = 'visible';
     } else if (numCellClicked == 9) {
-        socket.emit('draw', player1, player2, namePlayerCookie);
+        socket.emit('draw', player1.value, player2.value, namePlayerCookie);
     }
 
     document.querySelector('#whoPlayNow').textContent = whoPlayNow;
@@ -93,7 +95,58 @@ socket.on('whoPlayNow', (this_clickWhere, this_whoPlayNow, table, won, this_numC
 
 socket.on('draw', (msg) => {
     alert(msg);
+    btnPlayAgain.style.visibility = 'visible';
 });
+
+socket.on('load gif', (msg) => {
+    let gif = document.getElementById('gif-loading');
+    gif.style.display = "inline";
+
+    let opponnent = namePlayerCookie == player1.value ? player2.value : player1.value;
+    btnPlayAgain.disabled = true;
+    document.getElementById('msgPlayAgain').textContent = "Esperando " + opponnent + " aceitar...";
+});
+
+socket.on('receive invite', (msg) => {
+    let gif = document.getElementById('gif-loading');
+    gif.style.display = "inline";
+
+    let opponnent = namePlayerCookie == player1.value ? player2.value : player1.value;
+    document.getElementById('msgPlayAgain').textContent = "Jogar com " + opponnent;
+});
+
+socket.on('reset game', (_) => {
+    resetGame();
+});
+
+function resetGame() {
+    // reset the values
+    whoPlayNow = 'X';
+    tableGame = [];
+    numCellClicked = 0;
+
+    // reset the images
+    document.querySelectorAll('[id^="img-cell"]').forEach((img) => {
+        img.style.visibility = 'hidden';
+    });
+
+    // button reset
+    document.querySelector('#msgPlayAgain').textContent = "Jogar de novo"
+    btnPlayAgain.style.visibility = 'hidden';
+    btnPlayAgain.disabled = false;
+
+    // hide gif
+    let gif = document.getElementById('gif-loading');
+    gif.style.display = "none";
+
+    // symbolPlayer
+    symbolPlayer[namePlayerCookie] = namePlayerCookie == player1.value ? 'X' : 'O';
+
+    // enable buttons/cells
+    document.querySelectorAll('[id^="btn-cell"]').forEach((btn) => {
+        btn.disabled = false;
+    });
+}
 
 function updateButton(clickWhere, tableGame) {
     let img = document.getElementById(`img-cell-${clickWhere}`);
@@ -117,9 +170,8 @@ function updateButton(clickWhere, tableGame) {
 function startGame() {
     document.querySelector('#whoPlayNow').textContent = whoPlayNow;
 
-    document.querySelector('#reload').addEventListener('click', () => {
-        // location.reload()
-        alert("reiniciar");
+    btnPlayAgain.addEventListener('click', () => {
+        socket.emit('play again', player1.value, player2.value, namePlayerCookie);
     })
 }
 

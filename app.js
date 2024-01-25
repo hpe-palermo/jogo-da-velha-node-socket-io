@@ -170,7 +170,7 @@ io.on('connection', (socket) => {
         console.log('idJogador2:' + socketConnected[player2]);
 
         let key = `${player1}-${player2}`;
-        room_ply1_ply2[key] = { table: ['', '', '', '', '', '', '', '', ''], whoPlayNow: 'X' }
+        room_ply1_ply2[key] = { table: ['', '', '', '', '', '', '', '', ''] };
 
         socket.to(socketConnected[player1]).emit('joined-in-room', 'Welcome to room players!!!');
         socket.emit('joined-in-room', 'Welcome to room players!!!');
@@ -215,7 +215,38 @@ io.on('connection', (socket) => {
         socket.emit('draw', 'draw');
     });
 
+    socket.on('play again', (player1, player2, namePlayerCookie) => {
+        let key = `${player1}-${player2}`;
+        if (!room_ply1_ply2[key].playAgain) room_ply1_ply2[key].playAgain = 1;
+        else room_ply1_ply2[key].playAgain++;
+
+        console.log('room_ply1_ply2[key].playAgain: ' + room_ply1_ply2[key].playAgain)
+
+        let receivedId;
+
+        if (socket.id == socketConnected[player1]) receivedId = socketConnected[player2];
+        else receivedId = socketConnected[player1];
+
+        if (room_ply1_ply2[key].playAgain == 1) {
+            socket.to(receivedId).emit('receive invite', 'receive invite');
+            socket.emit('load gif', 'load gif');
+        } else {
+            console.log('the players want to continue play!!!');
+
+            resetDatasInServer(key);
+
+            socket.to(receivedId).emit('reset game', '');
+            socket.emit('reset game', '');
+        }
+    });
+
 });
+
+function resetDatasInServer(key) {
+    // reset datas of the match these players
+    delete room_ply1_ply2[key].playAgain;
+    room_ply1_ply2[key] = { table: ['', '', '', '', '', '', '', '', ''] };
+}
 
 function checkVictory(table) {
     // problem here ============================================

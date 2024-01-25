@@ -1,0 +1,86 @@
+:root {
+    --dimensao: 55px;
+}
+
+#quadrado {
+    width: var(--dimensao);
+    height: var(--dimensao);
+    background-color: transparent;
+    border: 1px solid #fff;
+    border-radius: 10px;
+    margin: 10px;
+}
+
+img {
+    transform: translate(3px, 2px);
+}
+
+[id^="btn-cell-"] {
+    background-color: #0d6efd;
+    margin: 0;
+    padding: 0;
+    height: 100px;
+    width: 100px;
+    outline: none;
+    border: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 3px solid #fff;
+}
+
+#area-game {
+    width: max-content;
+}
+
+#btn-cell-1,
+#btn-cell-2,
+#btn-cell-3 {
+    border-top: 5px solid #fff;
+}
+
+#btn-cell-7,
+#btn-cell-8,
+#btn-cell-9 {
+    border-bottom: 5px solid #fff;
+}
+
+#btn-cell-1,
+#btn-cell-4,
+#btn-cell-7 {
+    border-left: 5px solid #fff;
+}
+
+#btn-cell-3,
+#btn-cell-6,
+#btn-cell-9 {
+    border-right: 5px solid #fff;
+}
+
+#btn-cell-1 {
+    border-radius: 10px 0 0 0;
+}
+
+#btn-cell-3 {
+    border-radius: 0 10px 0 0;
+}
+
+#btn-cell-9 {
+    border-radius: 0 0 10px 0;
+}
+
+#btn-cell-7 {
+    border-radius: 0 0 0 10px;
+}
+
+[id^="img-cell"] {
+    visibility: hidden;
+}
+
+#reload {
+    visibility: hidden;
+}
+
+#gif-loading {
+    display: none;
+}
