@@ -176,7 +176,8 @@ io.on('connection', (socket) => {
         socket.emit('joined-in-room', 'Welcome to room players!!!');
     });
 
-    socket.on('whoPlayNow', (clickWhere, player1, player2, symbol, whoPlayNow) => {
+    socket.on('whoPlayNow', (clickWhere, player1, player2, symbol, whoPlayNow, numCellClicked) => {
+        console.log('clickWhere ' + clickWhere)
         if (whoPlayNow == symbol) {
             let receivedId;
             let table;
@@ -185,7 +186,7 @@ io.on('connection', (socket) => {
             else console.log(`${player2} check ${clickWhere}`);
 
             let key = `${player1}-${player2}`;
-            room_ply1_ply2[key].table[clickWhere - 1] = whoPlayNow;
+            if (!room_ply1_ply2[key].table[clickWhere - 1]) room_ply1_ply2[key].table[clickWhere - 1] = whoPlayNow;
             table = room_ply1_ply2[key].table;
             whoPlayNow = whoPlayNow == 'X' ? 'O' : 'X';
 
@@ -197,9 +198,21 @@ io.on('connection', (socket) => {
             if (socket.id == socketConnected[player1]) receivedId = socketConnected[player2];
             else receivedId = socketConnected[player1];
 
-            socket.to(receivedId).emit('whoPlayNow', whoPlayNow, table, won);
-            socket.emit('whoPlayNow', whoPlayNow, table, won);
+            numCellClicked++;
+
+            socket.to(receivedId).emit('whoPlayNow', clickWhere, whoPlayNow, table, won, numCellClicked);
+            socket.emit('whoPlayNow', clickWhere, whoPlayNow, table, won, numCellClicked);
         }
+    });
+
+    socket.on('draw', (player1, player2, namePlayerCookie) => {
+        let receivedId;
+
+        if (socket.id == socketConnected[player1]) receivedId = socketConnected[player2];
+        else receivedId = socketConnected[player1];
+
+        socket.to(receivedId).emit('draw', 'draw');
+        socket.emit('draw', 'draw');
     });
 
 });

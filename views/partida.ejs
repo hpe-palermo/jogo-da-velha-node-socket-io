@@ -26,17 +26,58 @@
             transform: translate(3px, 2px);
         }
 
-        #btn-cell {
+        [id^="btn-cell-"] {
             background-color: #0d6efd;
-            width: 100px;
+            margin: 0;
+            padding: 0;
             height: 100px;
+            width: 100px;
             outline: none;
             border: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 3px solid #fff;
         }
 
         #area-game {
-            background-color: #ffffff;
             width: max-content;
+        }
+
+        #btn-cell-1, #btn-cell-2, #btn-cell-3 {
+            border-top: 5px solid #fff;
+        }
+
+        #btn-cell-7, #btn-cell-8, #btn-cell-9 {
+            border-bottom: 5px solid #fff;
+        }
+
+        #btn-cell-1, #btn-cell-4, #btn-cell-7 {
+            border-left: 5px solid #fff;
+        }
+
+        #btn-cell-3, #btn-cell-6, #btn-cell-9 {
+            border-right: 5px solid #fff;
+        }
+
+        #btn-cell-1 {
+            border-radius: 10px 0 0 0;
+        }
+
+        #btn-cell-3 {
+            border-radius: 0 10px 0 0;
+        }
+
+        #btn-cell-9 {
+            border-radius: 0 0 10px 0;
+        }
+
+        #btn-cell-7 {
+            border-radius: 0 0 0 10px;
+        }
+
+        [id^="img-cell"] {
+            visibility: hidden;
         }
     </style>
 </head>
@@ -55,14 +96,14 @@
                     <input class="form-control" type="text" name="player1" id="player1" value="<%= locals.player1 %>">
                 </div>
                 <div id="quadrado">
-                    <img src="/img/symbol_X.png" width="90%" alt="symbol_X">
+                    <img src="/img/symbol_X.png" width="90%" alt="symbol_O">
                 </div>
             </div>
 
 
             <div class="d-flex">
                 <div id="quadrado">
-                    <img src="/img/symbol_O.png" width="90%" alt="symbol_O">
+                    <img src="/img/symbol_O.png" width="90%" alt="symbol_">
                 </div>
                 <div>
                     <label for="player2" class="text-light text-end w-100">Jogador 2</label>
@@ -71,42 +112,60 @@
             </div>
         </div>
 
-        <div class="text-center mt-3">
-            <div class="d-flex justify-content-center">
-                <div id="area-game">
-                    <div class="m-0 m-1">
-                        <button id="btn-cell">1</button>
-                        <button id="btn-cell">2</button>
-                        <button id="btn-cell">3</button>
-                    </div>
-                    <div class="mb-1">
-                        <button id="btn-cell">4</button>
-                        <button id="btn-cell">5</button>
-                        <button id="btn-cell">6</button>
-                    </div>
-                    <div class="mb-1">
-                        <button id="btn-cell">7</button>
-                        <button id="btn-cell">8</button>
-                        <button id="btn-cell">9</button>
-                    </div>
+        <div class="d-flex justify-content-center mt-3">
+            <div>
+                <div class="d-flex">
+                    <button id="btn-cell-1">
+                        <img id="img-cell-1" src="/img/symbol_X.png" width="80" alt="">
+                    </button>
+                    <button id="btn-cell-2">
+                        <img id="img-cell-2" src="/img/symbol_X.png" width="80" alt="">
+                    </button>
+                    <button id="btn-cell-3">
+                        <img id="img-cell-3" src="/img/symbol_X.png" width="80" alt="">
+                    </button>
+                </div>
+                <div class="d-flex">
+                    <button id="btn-cell-4">
+                        <img id="img-cell-4" src="/img/symbol_X.png" width="80" alt="">
+                    </button>
+                    <button id="btn-cell-5">
+                        <img id="img-cell-5" src="/img/symbol_X.png" width="80" alt="">
+                    </button>
+                    <button id="btn-cell-6">
+                        <img id="img-cell-6" src="/img/symbol_X.png" width="80" alt="">
+                    </button>
+                </div>
+                <div class="d-flex">
+                    <button id="btn-cell-7">
+                        <img id="img-cell-7" src="/img/symbol_X.png" width="80" alt="">
+                    </button>
+                    <button id="btn-cell-8">
+                        <img id="img-cell-8" src="/img/symbol_X.png" width="80" alt="">
+                    </button>
+                    <button id="btn-cell-9">
+                        <img id="img-cell-9" src="/img/symbol_X.png" width="80" alt="">
+                    </button>
                 </div>
             </div>
         </div>
-        <h2 class="text-center">
-            Vez do Jogador <span id="whoPlayNow"></span>
-        </h2>
-        <div class="text-center mt-3">
-            <div class="button">
-                <button id="reload" class="btn btn-secondary">Resetar Jogo</button>
-            </div>
+    </div>
+    </div>
+    <h2 class="text-center mt-2">
+        Vez do Jogador <span id="whoPlayNow"></span>
+    </h2>
+    <div class="text-center mt-3">
+        <div class="button">
+            <button disabled id="reload" class="btn btn-secondary">Resetar Jogo</button>
         </div>
+    </div>
 
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
 
     <script src="/js/partida.js"></script>
-    
+
 </body>
 
 </html>
