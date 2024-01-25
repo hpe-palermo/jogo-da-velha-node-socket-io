@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-    <title>Partida</title>
+    <title>Match</title>
 
     <style>
         :root {
@@ -21,6 +21,24 @@
             border-radius: 10px;
             margin: 10px;
         }
+
+        img {
+            transform: translate(3px, 2px);
+        }
+
+        #btn-cell {
+            background-color: #0d6efd;
+            width: 100px;
+            height: 100px;
+            outline: none;
+            border: none;
+            color: transparent;
+        }
+
+        #area-game {
+            background-color: #ffffff;
+            width: max-content;
+        }
     </style>
 </head>
 
@@ -28,92 +46,68 @@
     <div class="container mt-3">
 
         <div class="text-light border-bottom p-2 text-center fs-4">
-            <%= locals.salaGame.nome %>
+            Welcome to match
         </div>
 
         <div class="d-flex justify-content-between">
             <div class="d-flex">
                 <div>
-                    <label for="jogador1" class="text-light">Jogador 1</label>
-                    <input class="form-control" type="text" name="jogador1" id="jogador1"
-                        value="<%= locals.salaGame.jogador1 %>">
+                    <label for="player1" class="text-light">Jogador 1</label>
+                    <input class="form-control" type="text" name="player1" id="player1" value="<%= locals.player1 %>">
                 </div>
-                <div id="quadrado"></div>
+                <div id="quadrado">
+                    <img src="/img/symbol_X.png" width="90%" alt="symbol_X">
+                </div>
             </div>
 
 
             <div class="d-flex">
-                <div id="quadrado"></div>
+                <div id="quadrado">
+                    <img src="/img/symbol_O.png" width="90%" alt="symbol_O">
+                </div>
                 <div>
-                    <label for="jogador2" class="text-light text-end w-100">Jogador 2</label>
-                    <input class="form-control" type="text" name="jogador2" id="jogador2"
-                        value="<%= locals.salaGame.jogador2 %>">
+                    <label for="player2" class="text-light text-end w-100">Jogador 2</label>
+                    <input class="form-control" type="text" name="player2" id="player2" value="<%= locals.player2 %>">
                 </div>
             </div>
-
         </div>
 
-        <input type="hidden" name="numJogadores" id="numJogadores" value="<%= locals.salaGame.numJogadores %>">
-        <input type="hidden" name="idSala" id="idSala" value="<%= locals.salaGame.id %>">
-    </div>
+        <div class="text-center mt-3">
+            <div class="d-flex justify-content-center">
+                <div id="area-game">
+                    <div class="m-0 m-1">
+                        <button id="btn-cell">.</button>
+                        <button id="btn-cell">.</button>
+                        <button id="btn-cell">.</button>
+                    </div>
+                    <div class="mb-1">
+                        <button id="btn-cell">.</button>
+                        <button id="btn-cell">.</button>
+                        <button id="btn-cell">.</button>
+                    </div>
+                    <div class="mb-1">
+                        <button id="btn-cell">.</button>
+                        <button id="btn-cell">.</button>
+                        <button id="btn-cell">.</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <h2 class="text-center">
+            Vez do Jogador <span id="whoPlayNow"></span>
+        </h2>
+        <div class="text-center mt-3">
+            <div class="button">
+                <button class="btn btn-secondary">Resetar Jogo</button>
+            </div>
+        </div>
 
-    <!-- <div> meu id: <span></span></div> -->
+    </div>
 
     <script src="/socket.io/socket.io.js"></script>
 
-    <script>
-        const socket = io();
-        let nomeJogador;
-
-        function getNameCookie() {
-            let cookie = document.cookie;
-            let indIgual = cookie.indexOf('=');
-            nomeJogador = cookie.substring(indIgual + 1, cookie.length);
-        }
-        getNameCookie();
-
-        socket.emit('getMyIdSocket', nomeJogador);
-        socket.on('getMyId', (idSocket) => {
-            document.querySelector('span').innerText = idSocket;
-            novaSala.idJ1 = idSocket;
-            alert(idSocket);
-        });
-
-        let numJogadores = document.getElementById('numJogadores').value;
-        let idSala = document.getElementById('idSala').value;
-        let nomeSala = document.getElementById('nomeSala').value;
-
-        let novaSala = {
-            id: idSala,
-            criador: document.getElementById('jogador1').value,
-            nome: nomeSala,
-            adversario: document.getElementById('numJogadores').value,
-            numJogadores: document.getElementById('numJogadores').value,
-            jogador1: document.getElementById('jogador1').value,
-            jogador2: '',
-            idJ1: '',
-            idJ2: ''
-        }
-
-        alert(numJogadores);
-        if (numJogadores == 2) {
-            alert('2 Jogadores')
-            socket.emit('preencher-2-player-aqui', novaSala, nomeJogador);
-        }
-
-        socket.on('nome-2-player-recebido', (nomeJogador) => {
-            document.getElementById('jogador2').value = nomeJogador;
-            document.getElementById('numJogadores').value = 2;
-
-            socket.emit('avisar-2-player', novaSala);
-        });
-
-        socket.on('preencher-seu-2-player', (nomeJogador) => {
-            document.getElementById('jogador2').value = nomeJogador;
-            document.getElementById('numJogadores').value = 2;
-        });
-
-    </script>
+    <script src="/js/partida.js"></script>
+    
 </body>
 
 </html>

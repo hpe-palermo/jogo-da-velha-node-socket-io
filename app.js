@@ -14,7 +14,7 @@ app.set('views', join(__dirname, 'views'));
 app.use(express.static(join(__dirname, 'public')));
 app.use('/', router);
 
-let namespacePartida;
+let room_ply1_ply2 = {};
 let socketConnected = {};
 let playersConnected = [];
 let playersWithoutOpponent = [];
@@ -115,6 +115,13 @@ io.on('connection', (socket) => {
     socket.on('unload', (my_nickname) => {
         console.log(`${my_nickname} saiu da sala`);
 
+        for (const key in room_ply1_ply2) {
+            if (key.includes(my_nickname)) {
+                // delete this
+                delete room_ply1_ply2[key];
+            }
+        }
+
         let index = playersConnected.indexOf(my_nickname);
         playersConnected.splice(index, 1);
 
@@ -150,46 +157,111 @@ io.on('connection', (socket) => {
         socket.to(socketConnected[jogador2]).emit('invite player2', nameRoom);
     });
 
-    socket.on('player2-in-room', (nameRoom, jogador1, jogador2) => {
+    socket.on('player2-in-room', (nameRoom, player1, player2) => {
         // join jogador2 in room
         socket.join(nameRoom);
         console.log('Sockets in room ' + nameRoom + ':', io.sockets.adapter.rooms.get(nameRoom));
-        console.log(jogador2 + ' in room');
+        console.log(player2 + ' in room');
 
         console.log('nameRoom: ' + nameRoom);
-        console.log('jogador1:' + jogador1);
-        console.log('jogador2:' + jogador2);
-        console.log('idJogador1:' + socketConnected[jogador1]);
-        console.log('idJogador2:' + socketConnected[jogador2]);
-        socket.to(socketConnected[jogador1]).emit('joined-in-room', 'Welcome to room players!!!');
+        console.log('jogador1:' + player1);
+        console.log('jogador2:' + player2);
+        console.log('idJogador1:' + socketConnected[player1]);
+        console.log('idJogador2:' + socketConnected[player2]);
+
+        let key = `${player1}-${player2}`;
+        room_ply1_ply2[key] = { table: ['', '', '', '', '', '', '', '', ''], whoPlayNow: 'X' }
+
+        socket.to(socketConnected[player1]).emit('joined-in-room', 'Welcome to room players!!!');
         socket.emit('joined-in-room', 'Welcome to room players!!!');
     });
 
-    socket.on('whoPlayNow', (whoPlayNow, whoPlayed, clickedHouse, player1, player2) => {
-        whoPlayNow = whoPlayNow == "X" ? "O" : "X";
-        let receivedId;
-        if (whoPlayed == player1) {
-            receivedId = socketConnected[player2];
-        } else {
-            receivedId = socketConnected[player1];
-        }
-        socket.to(receivedId).emit('whoPlayNow', whoPlayNow, clickedHouse);
-        socket.emit('whoPlayNow', whoPlayNow, clickedHouse);
-    });
+    socket.on('whoPlayNow', (clickWhere, player1, player2, symbol, whoPlayNow) => {
+        if (whoPlayNow == symbol) {
+            let receivedId;
+            let table;
 
-    socket.on('change turn and show', (whoPlayNow, player1, player2) => {
-        whoPlayNow = whoPlayNow == "X" ? "O" : "X";
-        let receivedId;
-        if (socket.id == socketConnected[player1]) {
-            receivedId = socketConnected[player2];
-        } else {
-            receivedId = socketConnected[player1];
+            if (socket.id == socketConnected[player1]) console.log(`${player1} check ${clickWhere}`);
+            else console.log(`${player2} check ${clickWhere}`);
+
+            let key = `${player1}-${player2}`;
+            room_ply1_ply2[key].table[clickWhere - 1] = whoPlayNow;
+            table = room_ply1_ply2[key].table;
+            whoPlayNow = whoPlayNow == 'X' ? 'O' : 'X';
+
+            console.log('table -------');
+            console.log(table);
+
+            let won = checkVictory(table);
+
+            if (socket.id == socketConnected[player1]) receivedId = socketConnected[player2];
+            else receivedId = socketConnected[player1];
+
+            socket.to(receivedId).emit('whoPlayNow', whoPlayNow, table, won);
+            socket.emit('whoPlayNow', whoPlayNow, table, won);
         }
-        socket.to(receivedId).emit('change turn and show', whoPlayNow);
-        socket.emit('change turn and show', whoPlayNow);
     });
 
 });
+
+function checkVictory(table) {
+    // problem here ============================================
+    let line = ['line', false, -1];
+    let column = ['column', false, -1];
+    let diagonal = ['diagonal', false, -1];
+
+    // won line ?
+    let auxSymbol = '';
+    let auxNum = 0;
+    let contLine = -1;
+    if ((table[0] == table[1] && table[1] == table[2]) && (table[2] == 'X' || table[2] == 'O')) {
+        contLine = 0;
+    } else if ((table[3] == table[4] && table[4] == table[5]) && (table[5] == 'X' || table[5] == 'O')) {
+        contLine = 1;
+    } else if ((table[6] == table[7] && table[7] == table[8]) && (table[8] == 'X' || table[8] == 'O')) {
+        contLine = 2;
+    }
+    if (contLine != -1) {
+        line[1] = true;
+        line[2] = contLine;
+        return line;
+    }
+
+    // won column ?
+    let contColumn = -1;
+    if ((table[0] == table[3] && table[3] == table[6]) && (table[6] == 'X' || table[6] == 'O')) {
+        contColumn = 0;
+    } else if ((table[1] == table[4] && table[4] == table[7]) && (table[7] == 'X' || table[7] == 'O')) {
+        contColumn = 1;
+    } else if ((table[2] == table[5] && table[5] == table[8]) && (table[8] == 'X' || table[8] == 'O')) {
+        contColumn = 2;
+    }
+    if (contColumn != -1) {
+        column[1] = true;
+        column[2] = contColumn;
+        return column;
+    }
+
+    // won diagonal 1 or 2 ?
+    let d1, d2;
+    d1 = (
+        table[0] == table[4] && table[4] == table[8] &&
+        (table[4] == 'X' || table[4] == 'O')
+    );
+    d2 = (
+        table[6] == table[4] && table[4] == table[2] &&
+        (table[4] == 'X' || table[4] == 'O')
+    );
+    if (d1) {
+        diagonal[1] = true;
+        diagonal[2] = 0;
+        return diagonal;
+    } else if (d2) {
+        diagonal[1] = true;
+        diagonal[2] = 1;
+        return diagonal;
+    }
+}
 
 function makeLinkRoom(linkRoom, player1, player2) {
     app.get(linkRoom, (req, res) => {

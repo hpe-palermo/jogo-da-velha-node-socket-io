@@ -25,6 +25,19 @@
         img {
             transform: translate(3px, 2px);
         }
+
+        #btn-cell {
+            background-color: #0d6efd;
+            width: 100px;
+            height: 100px;
+            outline: none;
+            border: none;
+        }
+
+        #area-game {
+            background-color: #ffffff;
+            width: max-content;
+        }
     </style>
 </head>
 
@@ -39,46 +52,61 @@
             <div class="d-flex">
                 <div>
                     <label for="player1" class="text-light">Jogador 1</label>
-                    <input class="form-control" type="text" name="player1" id="player1"
-                        value="<%= locals.player1 %>">
+                    <input class="form-control" type="text" name="player1" id="player1" value="<%= locals.player1 %>">
                 </div>
                 <div id="quadrado">
-                    <img src="/img/symbol_X.png" width="90%" alt="simbolo_X">
+                    <img src="/img/symbol_X.png" width="90%" alt="symbol_X">
                 </div>
             </div>
 
 
             <div class="d-flex">
                 <div id="quadrado">
-                    <img src="/img/symbol_O.png" width="90%" alt="simbolo_O">
+                    <img src="/img/symbol_O.png" width="90%" alt="symbol_O">
                 </div>
                 <div>
                     <label for="player2" class="text-light text-end w-100">Jogador 2</label>
-                    <input class="form-control" type="text" name="player2" id="player2"
-                        value="<%= locals.player2 %>">
+                    <input class="form-control" type="text" name="player2" id="player2" value="<%= locals.player2 %>">
                 </div>
             </div>
         </div>
 
         <div class="text-center mt-3">
-            <canvas width="400"></canvas>
+            <div class="d-flex justify-content-center">
+                <div id="area-game">
+                    <div class="m-0 m-1">
+                        <button id="btn-cell">1</button>
+                        <button id="btn-cell">2</button>
+                        <button id="btn-cell">3</button>
+                    </div>
+                    <div class="mb-1">
+                        <button id="btn-cell">4</button>
+                        <button id="btn-cell">5</button>
+                        <button id="btn-cell">6</button>
+                    </div>
+                    <div class="mb-1">
+                        <button id="btn-cell">7</button>
+                        <button id="btn-cell">8</button>
+                        <button id="btn-cell">9</button>
+                    </div>
+                </div>
+            </div>
         </div>
         <h2 class="text-center">
-            Vez do Jogador <span id="whoPlayNow">X</span>
+            Vez do Jogador <span id="whoPlayNow"></span>
         </h2>
         <div class="text-center mt-3">
             <div class="button">
-                <button>Resetar Jogo</button>
+                <button id="reload" class="btn btn-secondary">Resetar Jogo</button>
             </div>
         </div>
 
     </div>
 
-    <!-- <div> meu id: <span></span></div> -->
-
     <script src="/socket.io/socket.io.js"></script>
 
     <script src="/js/partida.js"></script>
+    
 </body>
 
 </html>
