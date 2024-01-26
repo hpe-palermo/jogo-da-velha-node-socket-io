@@ -4,7 +4,7 @@ let myIdSocket;
 socket.emit('getMyId', '');
 socket.on('getMyId', (id) => {
     myIdSocket = id;
-    alert('My id: ' + myIdSocket);
+    // alert('My id: ' + myIdSocket);
 });
 
 let myNickname = document.getElementById('myNickname');
@@ -112,7 +112,7 @@ function deletePlayer() {
 
 function playWith(nameCapitalized) {
     if (my_nickname) {
-        alert(my_nickname + " entrou na sala");
+        // alert(my_nickname + " entrou na sala");
         socket.emit('play-with', my_nickname, nameCapitalized);
     } else {
         alert('Enter with nickname');

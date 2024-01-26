@@ -13,6 +13,9 @@ app.set('view engine', 'ejs');
 app.set('views', join(__dirname, 'views'));
 app.use(express.static(join(__dirname, 'public')));
 app.use('/', router);
+app.use((req, res, next) => {
+    res.status(404).sendFile(join(__dirname, 'public', '404.html'));
+});
 
 let room_ply1_ply2 = {};
 let socketConnected = {};
