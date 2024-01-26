@@ -38,6 +38,8 @@ socket.on('state-nickname', (msgError, accepted, myId) => {
         myID_nickname = myId;
         my_nickname = myNickname.value;
         document.cookie = 'username='+myNickname.value;
+    } else {
+        myNickname.focus();
     }
     stateNickname.innerText = msgError;
 });
@@ -108,6 +110,7 @@ function renderElements() {
 
 function deletePlayer() {
     socket.emit('delete player', myID_nickname);
+    myID_nickname = -1;
 }
 
 function playWith(nameCapitalized) {

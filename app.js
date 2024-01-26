@@ -13,9 +13,9 @@ app.set('view engine', 'ejs');
 app.set('views', join(__dirname, 'views'));
 app.use(express.static(join(__dirname, 'public')));
 app.use('/', router);
-app.use((req, res, next) => {
-    res.status(404).sendFile(join(__dirname, 'public', '404.html'));
-});
+// app.use((req, res, next) => {
+//     res.status(404).sendFile(join(__dirname, 'public', '404.html'));
+// });
 
 let room_ply1_ply2 = {};
 let socketConnected = {};
@@ -58,11 +58,13 @@ io.on('connection', (socket) => {
 
             accepted = true;
 
-            rooms.push({
+            let room = {
                 jogador1: myNickname,
                 jogador2: '',
                 link: '',
-            });
+            };
+            rooms.push(room);
+            console.log('new room: ' + JSON.stringify(rooms));
 
             socketConnected[myNickname] = socket.id;
             console.log(socketConnected);
@@ -95,6 +97,9 @@ io.on('connection', (socket) => {
         // make link if room
         console.log('room game');
         let room = rooms.find(room => room.jogador1 == jogador1);
+        console.log("jogador1: " + jogador1);
+        console.log("jogador2: " + jogador2);
+        console.log(room);
         room.jogador2 = jogador2;
         room.link = `/${jogador1}-${jogador2}`;
         console.log(room);
@@ -127,9 +132,16 @@ io.on('connection', (socket) => {
 
         let index = playersConnected.indexOf(my_nickname);
         playersConnected.splice(index, 1);
+        console.log(playersConnected);
 
         index = playersWithoutOpponent.indexOf(my_nickname);
         playersWithoutOpponent.splice(index, 1);
+        console.log(playersWithoutOpponent);
+
+        delete socketConnected[my_nickname];
+        let room = rooms.filter(room => rooms.jogador1 == my_nickname);
+        index = rooms.indexOf(room);
+        rooms.splice(index, 1);
 
         io.emit('list-players', playersWithoutOpponent);
     });
@@ -241,6 +253,19 @@ io.on('connection', (socket) => {
             socket.to(receivedId).emit('reset game', '');
             socket.emit('reset game', '');
         }
+    });
+
+    socket.on('unload match', (player1, player2, namePlayerCookie) => {
+        delete socketConnected[namePlayerCookie];
+
+        let receivedId;
+
+        if (socket.id == socketConnected[player1]) receivedId = socketConnected[player2];
+        else receivedId = socketConnected[player1];
+
+        playersWithoutOpponent.push(namePlayerCookie);
+
+        socket.to(receivedId).emit('player leave match', namePlayerCookie);
     });
 
 });

@@ -30,9 +30,12 @@ socket.on('invite player2', (nameRoom) => {
 });
 
 socket.on('joined-in-room', (msg) => {
+    alert(msg);
     symbolPlayer[namePlayerCookie] = namePlayerCookie == player1.value ? 'X' : 'O';
     alert('I\'m ' + symbolPlayer[namePlayerCookie]);
 });
+
+// get id socket's player
 
 let myIdSocket;
 socket.emit('getMyId', '');
@@ -40,7 +43,7 @@ socket.on('getMyId', (id) => {
     myIdSocket = id;
 });
 
-// starting the match ============================================
+// starting the match =====================================================
 
 // setting the game
 let whoPlayNow = 'X';
@@ -177,7 +180,13 @@ function startGame() {
 
 startGame();
 
+socket.on('player leave match', (player) => {
+    alert('Jogador ' + player + " deixou a partida");
+    window.location.href = '/';
+});
+
+
 // when the user go out of the room
-// window.addEventListener('beforeunload', () => {
-//     socket.emit('unload match', namePlayerCookie);
-// });
+window.addEventListener('beforeunload', () => {
+    socket.emit('unload match', player1.value, player2.value, namePlayerCookie);
+});
