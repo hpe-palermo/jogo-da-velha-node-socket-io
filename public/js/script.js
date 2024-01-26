@@ -111,7 +111,7 @@ function deletePlayer() {
 }
 
 function playWith(nameCapitalized) {
-    if (myNickname.value) {
+    if (my_nickname) {
         alert(my_nickname + " entrou na sala");
         socket.emit('play-with', my_nickname, nameCapitalized);
     } else {
