@@ -30,7 +30,6 @@ socket.on('invite player2', (nameRoom) => {
 });
 
 socket.on('joined-in-room', (msg) => {
-    alert(msg);
     symbolPlayer[namePlayerCookie] = namePlayerCookie == player1.value ? 'X' : 'O';
     alert('I\'m ' + symbolPlayer[namePlayerCookie]);
 });
@@ -114,6 +113,9 @@ socket.on('receive invite', (msg) => {
     let gif = document.getElementById('gif-loading');
     gif.style.display = "inline";
 
+    let leaveMatch = document.getElementById('leave-match');
+    leaveMatch.style.display = "inline";
+
     let opponnent = namePlayerCookie == player1.value ? player2.value : player1.value;
     document.getElementById('msgPlayAgain').textContent = "Jogar com " + opponnent;
 });
@@ -149,6 +151,9 @@ function resetGame() {
     document.querySelectorAll('[id^="btn-cell"]').forEach((btn) => {
         btn.disabled = false;
     });
+
+    // button leave match
+    document.getElementById('leave-match').style.display = 'none';
 }
 
 function updateButton(clickWhere, tableGame) {
@@ -175,7 +180,11 @@ function startGame() {
 
     btnPlayAgain.addEventListener('click', () => {
         socket.emit('play again', player1.value, player2.value, namePlayerCookie);
-    })
+    });
+
+    document.getElementById('leave-match').addEventListener('click', () => {
+        window.location.href = '/';
+    });
 }
 
 startGame();

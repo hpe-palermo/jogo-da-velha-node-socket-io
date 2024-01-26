@@ -13,14 +13,15 @@ app.set('view engine', 'ejs');
 app.set('views', join(__dirname, 'views'));
 app.use(express.static(join(__dirname, 'public')));
 app.use('/', router);
-// app.use((req, res, next) => {
-//     res.status(404).sendFile(join(__dirname, 'public', '404.html'));
-// });
+app.use((req, res, next) => {
+    res.status(404).sendFile(join(__dirname, 'public', '404.html'));
+    next();
+});
 
 let room_ply1_ply2 = {};
 let socketConnected = {};
-let playersConnected = [];
 let playersWithoutOpponent = [];
+let playersPlayingNow = [];
 let rooms = [];
 
 io.on('connection', (socket) => {
@@ -32,116 +33,148 @@ io.on('connection', (socket) => {
         console.log('user disconnected');
     });
 
-    socket.on('getMyId', (_) => {
+    socket.on('getMyId', (name) => {
+        if (name)
+            socketConnected[name] = socket.id;
+        console.log('socketConnected ==============\n' + JSON.stringify(socketConnected));
         socket.emit('getMyId', socket.id);
     });
 
-    socket.on('save-nickname', (myNickname, myID_nickname) => {
+    socket.on('save-nickname', (myNickname) => {
         // check the nickname
-        let myId = -1;
-        let accepted = false;
         let state = checkNickname(myNickname);
-        if (state == 'Accepted nickname!') {
 
-            // check if nickname is already
-            if (myID_nickname == -1) {
-                playersConnected.push(myNickname.toLowerCase());
-                playersWithoutOpponent.push(myNickname.toLowerCase());
-            } else {
-                playersConnected[myID_nickname] = myNickname.toLowerCase();
-                playersWithoutOpponent[myID_nickname] = myNickname.toLowerCase();
+        if (state[1]) {
+            // Accepted nickname
+
+            // already exists this socket.id
+            for (const namePlayer in socketConnected) {
+                if (socket.id == socketConnected[namePlayer]) {
+                    delete socketConnected[namePlayer];
+
+                    let index = playersWithoutOpponent.indexOf(namePlayer);
+                    playersWithoutOpponent.splice(index, 1);
+
+                    let indexRoom = rooms.indexOf(room => room.jogador1 === namePlayer);
+                    rooms.splice(indexRoom, 1);
+                    break;
+                };
             }
 
-            myId = playersConnected.length - 1;
-            console.log('Accepted nickname: ' + myNickname);
-            console.log('ID nickname: ' + myId);
+            // don't exists this socket.id
+            console.log('-----------------------');
+            console.log('Accepted nickname: "' + myNickname + '"');
+            console.log('-----------------------\n');
 
-            accepted = true;
-
-            let room = {
-                jogador1: myNickname,
-                jogador2: '',
-                link: '',
-            };
-            rooms.push(room);
-            console.log('new room: ' + JSON.stringify(rooms));
+            playersWithoutOpponent.push(myNickname);
 
             socketConnected[myNickname] = socket.id;
-            console.log(socketConnected);
+
+            rooms.push(
+                {
+                    jogador1: myNickname,
+                    jogador2: '',
+                    link: '',
+                }
+            );
+        } else {
+            // Refused nickname
+            console.log('-----------------------');
+            console.log('Refused nickname: "' + myNickname + '"');
+            console.log('-----------------------\n');
         }
 
-        console.log(playersConnected);
-        console.log(playersWithoutOpponent);
-        socket.emit('state-nickname', state, accepted, myId);
+        socket.emit('state-nickname', state);
         io.emit('list-players', playersWithoutOpponent);
     });
 
-    socket.on('delete player', (myID_nickname) => {
+    socket.on('delete player', (my_nickname) => {
         // delete player
-        playersConnected.splice(myID_nickname, 1);
-        playersWithoutOpponent.splice(myID_nickname, 1);
+        let index = playersWithoutOpponent.indexOf(my_nickname);
+        playersWithoutOpponent.splice(index, 1);
+
         io.emit('list-players', playersWithoutOpponent);
     });
 
     socket.on('play-with', (jogador2, jogador1) => {
         // make a room to two players and remove them from the list playersWithoutOpponent
-        let indexJ2 = playersWithoutOpponent.indexOf(jogador2);
-        playersWithoutOpponent.splice(indexJ2, 1);
+        let index = playersWithoutOpponent.indexOf(jogador2);
+        playersWithoutOpponent.splice(index, 1);
+        console.log('INDEX IN PLAY-WITH -> '+index);
 
-        let indexJ1 = playersWithoutOpponent.indexOf(jogador1);
-        playersWithoutOpponent.splice(indexJ1, 1);
+        index = playersWithoutOpponent.indexOf(jogador1);
+        playersWithoutOpponent.splice(index, 1);
+        console.log('INDEX IN PLAY-WITH -> '+index);
 
-        console.log(`${jogador2} entrou na sala com ${jogador1}`);
+        // add them in list play now
+        playersPlayingNow.push(jogador1);
+        playersPlayingNow.push(jogador2);
+
+        console.log(`${jogador2} will to play with ${jogador1}`);
         console.log(playersWithoutOpponent);
 
-        // make link if room
-        console.log('room game');
+        // make link in room's creator
         let room = rooms.find(room => room.jogador1 == jogador1);
         console.log("jogador1: " + jogador1);
         console.log("jogador2: " + jogador2);
-        console.log(room);
+        console.log('------------- room game -------------');
         room.jogador2 = jogador2;
         room.link = `/${jogador1}-${jogador2}`;
         console.log(room);
+        console.log('-------------------------------------');
 
         // delete room from other player
         let roomUpdate = rooms.filter(room => room.jogador1 != jogador2);
         rooms = roomUpdate;
         console.log(rooms);
+        
+        console.log('------------- all rooms -------------');
+        console.log(JSON.stringify(rooms));
+        console.log(playersWithoutOpponent);
+        console.log('-------------------------------------');
 
         // access the link room
         makeLinkRoom(room.link, jogador1, jogador2);
 
+        // show updated list
+        console.log('-------- emit event --------');
+        console.log(playersWithoutOpponent);
         io.emit('list-players', playersWithoutOpponent);
 
         // send the link to both players
         io.to(socketConnected[jogador1]).emit('access-link-room', room.link);
         io.to(socketConnected[jogador2]).emit('access-link-room', room.link);
-
     });
 
-    socket.on('unload', (my_nickname) => {
-        console.log(`${my_nickname} saiu da sala`);
+    socket.on('unload', (my_nickname, willPlayNow) => {
+        if (willPlayNow) {
+            // delete him from the list without opponent
+            // let index = playersWithoutOpponent.indexOf(my_nickname);
+            // playersWithoutOpponent.splice(index, 1);
+            console.log('unload main page by '+my_nickname);
+            console.log(playersWithoutOpponent);
 
-        for (const key in room_ply1_ply2) {
-            if (key.includes(my_nickname)) {
-                // delete this
-                delete room_ply1_ply2[key];
+            // add him in list playing now
+            playersPlayingNow.push(my_nickname);
+
+            for (const key in room_ply1_ply2) {
+                if (key.includes(my_nickname)) {
+                    // delete this
+                    delete room_ply1_ply2[key];
+                }
             }
+        } else {
+            console.log(`${my_nickname} saiu da sala`);
+
+            // delete your room
+            let room = rooms.find(r => r.jogador1 === my_nickname);
+            let index = rooms.indexOf(room);
+            rooms.splice(index, 1);
+
+            // delete his from the list without opponent
+            index = playersWithoutOpponent.indexOf(my_nickname);
+            playersWithoutOpponent.splice(index, 1);
         }
-
-        let index = playersConnected.indexOf(my_nickname);
-        playersConnected.splice(index, 1);
-        console.log(playersConnected);
-
-        index = playersWithoutOpponent.indexOf(my_nickname);
-        playersWithoutOpponent.splice(index, 1);
-        console.log(playersWithoutOpponent);
-
-        delete socketConnected[my_nickname];
-        let room = rooms.filter(room => rooms.jogador1 == my_nickname);
-        index = rooms.indexOf(room);
-        rooms.splice(index, 1);
 
         io.emit('list-players', playersWithoutOpponent);
     });
@@ -151,7 +184,7 @@ io.on('connection', (socket) => {
         let name = cookie.split('=')[1];
         if (link.includes(name)) {
             socket.emit('can i stay here', true);
-            playersConnected.push(name);
+            // playersWithoutOpponent.push(name);
             socketConnected[name] = socket.id;
             console.log('reconnecting... ');
             console.log('reconnected: ' + name);
@@ -173,6 +206,9 @@ io.on('connection', (socket) => {
     });
 
     socket.on('player2-in-room', (nameRoom, player1, player2) => {
+        console.log(' ------ list without opponent before ------');
+        console.log(playersWithoutOpponent);
+
         // join jogador2 in room
         socket.join(nameRoom);
         console.log('Sockets in room ' + nameRoom + ':', io.sockets.adapter.rooms.get(nameRoom));
@@ -183,6 +219,8 @@ io.on('connection', (socket) => {
         console.log('jogador2:' + player2);
         console.log('idJogador1:' + socketConnected[player1]);
         console.log('idJogador2:' + socketConnected[player2]);
+        console.log(' ------ list without opponent after ------');
+        console.log(playersWithoutOpponent);
 
         let key = `${player1}-${player2}`;
         room_ply1_ply2[key] = { table: ['', '', '', '', '', '', '', '', ''] };
@@ -263,7 +301,7 @@ io.on('connection', (socket) => {
         if (socket.id == socketConnected[player1]) receivedId = socketConnected[player2];
         else receivedId = socketConnected[player1];
 
-        playersWithoutOpponent.push(namePlayerCookie);
+        delete socketConnected[namePlayerCookie];
 
         socket.to(receivedId).emit('player leave match', namePlayerCookie);
     });
@@ -345,13 +383,22 @@ function makeLinkRoom(linkRoom, player1, player2) {
 function checkNickname(myNickname) {
     if (!myNickname) {
         // is empty
-        return 'Nickname cannot be empty!';
-    } else if (playersWithoutOpponent.includes(myNickname.toLowerCase())) {
-        // already exists
-        return 'This nickname already exists!';
+        return ['Nickname cannot be empty!', false];
     } else {
-        // accepted
-        return "Accepted nickname!";
+        let ret = '';
+        for (const name of playersWithoutOpponent) {
+            if (myNickname.toLowerCase() == name.toLowerCase()) {
+                // already exists
+                ret = 'This nickname already exists!';
+            }
+        }
+
+        if (ret) {
+            return [ret, false];
+        } else {
+            // accepted
+            return ["Accepted nickname!", true];
+        }
     }
 }
 

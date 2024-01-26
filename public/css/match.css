@@ -81,6 +81,6 @@ img {
     visibility: hidden;
 }
 
-#gif-loading {
+#gif-loading, #leave-match {
     display: none;
 }

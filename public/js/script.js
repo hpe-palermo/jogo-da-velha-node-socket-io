@@ -1,12 +1,7 @@
 let socket = io();
 
 let myIdSocket;
-socket.emit('getMyId', '');
-socket.on('getMyId', (id) => {
-    myIdSocket = id;
-    // alert('My id: ' + myIdSocket);
-});
-
+let willPlayNow = false;
 let myNickname = document.getElementById('myNickname');
 let findPlayer = document.getElementById('findPlayer');
 let listPlayers = document.querySelectorAll('h3');
@@ -16,13 +11,12 @@ let namesPlayer = [];
 let namesPlayerToRender = [];
 let stateNickname = document.getElementById('state-nickname');
 let btnSend = document.getElementById('btnSend');
-let myID_nickname = -1;
 let my_nickname = '';
 
 // input my nickname
 btnSend.addEventListener('click', () => {
     // sends nickname to server to check if name is valid
-    socket.emit('save-nickname', myNickname.value, myID_nickname);
+    socket.emit('save-nickname', myNickname.value);
 });
 
 // list players connected to server
@@ -33,18 +27,23 @@ socket.on('list-players', (playersConnected) => {
 });
 
 // message of error of nickname
-socket.on('state-nickname', (msgError, accepted, myId) => {
-    if (accepted) {
-        myID_nickname = myId;
+socket.on('state-nickname', (state) => {
+    if (state[1]) {
         my_nickname = myNickname.value;
-        document.cookie = 'username='+myNickname.value;
+        document.cookie = 'username=' + my_nickname;
+        socket.emit('getMyId', my_nickname);
     } else {
         myNickname.focus();
     }
-    stateNickname.innerText = msgError;
+    stateNickname.innerText = state[0];
+});
+
+socket.on('getMyId', (id) => {
+    myIdSocket = id;
 });
 
 socket.on('access-link-room', (link) => {
+    willPlayNow = true;
     window.location.href = link;
 })
 
@@ -56,7 +55,6 @@ listPlayers.forEach((player) => {
 
 findPlayer.addEventListener('input', () => {
     // filter players
-    // alert('-> '+namesPlayer);
     namesPlayer.forEach((player) => {
         // players
         if (player.toLowerCase().includes(findPlayer.value.toLowerCase())) {
@@ -73,8 +71,9 @@ function renderElements() {
     listPlayers.innerHTML = '';
 
     let elementToRender = '';
-    console.log('----------------------------------------------------------------');
+    console.log('------------------ namesPlayerToRender -----------------------');
     console.log(namesPlayerToRender);
+    console.log('--------------------------------------------------------------');
     namesPlayerToRender.forEach((player, index) => {
         let nameCapitalized = player.charAt(0).toUpperCase() + player.slice(1);
         elementToRender +=
@@ -83,8 +82,7 @@ function renderElements() {
             <h3 class="m-2" id="namePlayer">${index} - ${nameCapitalized}</h3>
             <div>
         `;
-        if (my_nickname.toLowerCase() == player) {
-            myID_nickname = index;
+        if (my_nickname.toLowerCase() == nameCapitalized.toLowerCase()) {
             elementToRender +=
                 `
             <button class="btn btn-danger m-1" onclick="deletePlayer()">Delete</button>
@@ -102,28 +100,26 @@ function renderElements() {
         `;
 
         listPlayers.innerHTML = elementToRender;
-        console.log(`Player[${index}]: ${player}`)
+        console.log(`Player[${index}]: ${player}`);
+        console.log(`my_nickname: ${my_nickname}`);
     });
 
     namesPlayerToRender = [];
 }
 
 function deletePlayer() {
-    socket.emit('delete player', myID_nickname);
-    myID_nickname = -1;
+    socket.emit('delete player', my_nickname);
 }
 
 function playWith(nameCapitalized) {
     if (my_nickname) {
-        // alert(my_nickname + " entrou na sala");
         socket.emit('play-with', my_nickname, nameCapitalized);
     } else {
         alert('Enter with nickname');
     }
-
 }
 
 // when the user go out of the room
 window.addEventListener('beforeunload', () => {
-    socket.emit('unload', my_nickname);
+    socket.emit('unload', my_nickname, willPlayNow);
 });
